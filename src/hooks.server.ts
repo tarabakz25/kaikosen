@@ -1,22 +1,34 @@
+import { createServerClient } from '@supabase/ssr';
+import { PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY } from '$env/static/public';
 import type { Handle } from '@sveltejs/kit';
-import { auth } from '$lib/server/auth';
 
 export const handle: Handle = async ({ event, resolve }) => {
-	const session = await auth.api.getSession({ headers: event.request.headers });
+	event.locals.supabase = createServerClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY, {
+		cookies: {
+			getAll: () => event.cookies.getAll(),
+			setAll: (cookiesToSet) => {
+				cookiesToSet.forEach(({ name, value, options }) =>
+					event.cookies.set(name, value, { ...options, path: '/' })
+				);
+			}
+		}
+	});
 
-	if (session) {
+	const {
+		data: { user }
+	} = await event.locals.supabase.auth.getUser();
+
+	if (user) {
 		event.locals.user = {
-			id: session.user.id,
-			name: session.user.name,
-			email: session.user.email,
-			image: session.user.image
-		};
-		event.locals.session = {
-			id: session.session.id,
-			userId: session.session.userId,
-			expiresAt: session.session.expiresAt.toISOString()
+			id: user.id,
+			name: user.user_metadata?.full_name ?? user.email ?? '',
+			email: user.email ?? '',
+			image: user.user_metadata?.avatar_url ?? null
 		};
 	}
 
-	return resolve(event);
+	return resolve(event, {
+		filterSerializedResponseHeaders: (name) =>
+			name === 'content-range' || name === 'x-supabase-api-version'
+	});
 };

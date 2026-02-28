@@ -4,6 +4,37 @@
 
 ### Changed
 
+#### Database & Authentication: Neon + better-auth → Supabase
+
+- **DB接続を `@neondatabase/serverless` → `postgres` (postgres-js) に移行**
+  - `src/lib/server/db/index.ts`: `drizzle-orm/neon-http` → `drizzle-orm/postgres-js`、`neon()` クライアント → `postgres(url, { prepare: false })`（Supabase connection pooler のトランザクションモードに対応）
+  - `@neondatabase/serverless`、`@neondatabase/neon-js` を削除
+  - `postgres@3.4.8` を追加
+
+- **認証を `better-auth` → Supabase Auth (`@supabase/supabase-js` + `@supabase/ssr`) に移行**
+  - `better-auth` を削除
+  - `@supabase/supabase-js@2.98.0`、`@supabase/ssr@0.8.0` を追加
+  - `src/hooks.server.ts`: `createServerClient` (SSR) でリクエストごとに Supabase クライアントを生成し `locals.supabase` に格納。`getUser()` でユーザー取得し `locals.user` に設定
+  - `src/lib/auth-client.ts`: `better-auth/client` → `createBrowserClient` に変更、`supabase` としてエクスポート
+  - `src/lib/server/auth.ts` を削除（不要）
+  - `src/lib/server/db/auth.schema.ts` を削除（Supabase Auth が独自管理）
+  - `src/routes/api/auth/[...all]/+server.ts` を削除
+  - `src/routes/auth/callback/+server.ts` を新規作成。OAuth code → `exchangeCodeForSession()` で交換し `/` にリダイレクト
+  - `src/routes/login/+page.svelte`: `authClient.signIn.social()` → `supabase.auth.signInWithOAuth()`、callback URL を `/auth/callback` に変更
+  - `src/routes/account/+page.svelte`: `authClient.signOut()` → `supabase.auth.signOut()`
+  - `src/app.d.ts`: `Locals` に `supabase: SupabaseClient` を追加、`session` フィールドを削除
+  - `.env.example`: `BETTER_AUTH_SECRET`/`GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET` を削除、`PUBLIC_SUPABASE_URL`/`PUBLIC_SUPABASE_ANON_KEY` を追加
+
+- **Supabase ダッシュボードで要設定:**
+  - Google OAuth プロバイダーを有効化（Authentication → Providers）
+  - Redirect URL に `[your-origin]/auth/callback` を追加
+
+---
+
+## [Previous] - 2026-02-28
+
+### Changed
+
 #### Authentication
 
 - **認証基盤を neon-auth → better-auth に移行**

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { authClient } from '$lib/auth-client';
+	import { supabase } from '$lib/auth-client';
 	import { goto } from '$app/navigation';
 
 	let { data } = $props();
@@ -52,7 +52,8 @@
 	}
 
 	async function signOut() {
-		await authClient.signOut({ fetchOptions: { onSuccess: () => goto('/login') } });
+		await supabase.auth.signOut();
+		goto('/login');
 	}
 </script>
 

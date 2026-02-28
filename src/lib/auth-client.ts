@@ -1,5 +1,4 @@
-import { createAuthClient } from 'better-auth/client';
+import { createBrowserClient } from '@supabase/ssr';
+import { PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY } from '$env/static/public';
 
-export const authClient = createAuthClient({
-	baseURL: typeof window !== 'undefined' ? window.location.origin : ''
-});
+export const supabase = createBrowserClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY);

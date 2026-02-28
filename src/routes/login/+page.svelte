@@ -1,8 +1,11 @@
 <script lang="ts">
-  import { authClient } from '$lib/auth-client';
+  import { supabase } from '$lib/auth-client';
 
   async function signInWithGoogle() {
-    await authClient.signIn.social({ provider: 'google', callbackURL: `${window.location.origin}/` });
+    await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: `${window.location.origin}/auth/callback` }
+    });
   }
 </script>
 
