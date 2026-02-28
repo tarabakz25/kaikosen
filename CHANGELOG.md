@@ -2,6 +2,12 @@
 
 ## [Unreleased] - 2026-02-28
 
+### Fixed
+
+#### Build
+
+- **package.json** - `overrides: { estree-walker: ^3.0.3 }` を削除。`@vercel/nft@1.3.2` はCJSで `require('estree-walker')` するが、v3はESM-onlyのため `ERR_PACKAGE_PATH_NOT_EXPORTED` が発生していた。overrideを外すことでbunが適切にネスト解決（top-levelにv2、`@vitest/mocker/`以下にv3）し、Vercelビルドが通るようになった。
+
 ### Changed
 
 #### Infrastructure
