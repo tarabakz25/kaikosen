@@ -22,7 +22,7 @@ export const GET: RequestHandler = async ({ locals }) => {
 		avatarUrl: p.avatarUrl
 	}));
 
-	const edges = connections.map((c) => ({ source: c.userId, target: c.targetUserId }));
+	const edges = connections.map((c) => ({ source: c.userId, target: c.targetUserId, alias: c.alias }));
 
-	return Response.json({ nodes, edges });
+	return Response.json({ nodes, edges, currentUserId: userId });
 };

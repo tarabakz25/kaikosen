@@ -4,6 +4,11 @@
 
 ### Added / Fixed
 
+#### グラフ: ノードクリック時に二つ名を表示
+- `src/lib/types.ts`: `GraphEdge` に `alias: string` フィールドを追加
+- `src/routes/api/graph/+server.ts`: エッジに `alias` を含め、`currentUserId` をレスポンスに追加
+- `src/routes/+page.svelte`: `currentUserId`・`graphEdges` を保持し、ノードクリック時に対応エッジから `alias` を取得。ポップアップに「二つ名」として表示
+
 #### つながり機能: 双方向接続の自動作成
 - `src/routes/api/connections/+server.ts`: POST 時に A→B を作成後、B→A の逆方向 connection が存在しなければ自動挿入。グラフがスキャンした側・された側の両方に反映される
 

@@ -7,6 +7,9 @@
 
   let svgEl: SVGSVGElement;
   let selectedNode = $state<GraphNode | null>(null);
+  let selectedAlias = $state<string | null>(null);
+  let currentUserId = $state<string | null>(null);
+  let graphEdges = $state<GraphEdge[]>([]);
 
   function schoolColor(schoolName: string): string {
     let hash = 0;
@@ -18,7 +21,9 @@
   onMount(async () => {
     const res = await fetch('/api/graph');
     if (!res.ok) return;
-    const { nodes, edges }: { nodes: GraphNode[], edges: GraphEdge[] } = await res.json();
+    const { nodes, edges, currentUserId: uid }: { nodes: GraphNode[], edges: GraphEdge[], currentUserId: string } = await res.json();
+    currentUserId = uid;
+    graphEdges = edges;
 
     if (nodes.length === 0) return;
 
@@ -51,7 +56,11 @@
       .attr('fill', (d) => schoolColor(d.schoolName))
       .attr('stroke', '#1f2937').attr('stroke-width', 2)
       .style('cursor', 'pointer')
-      .on('click', (_, d) => { selectedNode = d; });
+      .on('click', (_, d) => {
+        selectedNode = d;
+        const edge = graphEdges.find((e) => e.source === currentUserId && e.target === d.id);
+        selectedAlias = edge?.alias ?? null;
+      });
 
     const label = g.append('g').selectAll('text')
       .data(nodes).enter().append('text')
@@ -89,7 +98,7 @@
 </div>
 
 {#if selectedNode}
-  <div class="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4" onclick={() => selectedNode = null}>
+  <div class="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4" onclick={() => { selectedNode = null; selectedAlias = null; }}>
     <div class="bg-gray-900 rounded-2xl w-full max-w-lg p-6" onclick={(e) => e.stopPropagation()}>
       <div class="flex items-center gap-4 mb-4">
         <div class="w-14 h-14 rounded-full flex items-center justify-center text-xl font-bold text-white" style="background-color: {schoolColor(selectedNode.schoolName)}">
@@ -98,6 +107,9 @@
         <div>
           <h2 class="text-xl font-bold text-white">{selectedNode.nickname}</h2>
           <p class="text-gray-400">{selectedNode.schoolName}</p>
+          {#if selectedAlias}
+            <p class="text-indigo-400 text-sm mt-0.5">二つ名: {selectedAlias}</p>
+          {/if}
         </div>
       </div>
       <div class="flex flex-wrap gap-1.5">
@@ -105,7 +117,7 @@
           <span class="text-sm bg-indigo-900 text-indigo-300 px-3 py-1 rounded-full">#{tag}</span>
         {/each}
       </div>
-      <button onclick={() => selectedNode = null} class="mt-4 w-full py-3 rounded-xl border border-gray-700 text-gray-400 hover:text-white transition-colors">
+      <button onclick={() => { selectedNode = null; selectedAlias = null; }} class="mt-4 w-full py-3 rounded-xl border border-gray-700 text-gray-400 hover:text-white transition-colors">
         閉じる
       </button>
     </div>
