@@ -77,34 +77,38 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 		ev = dbEv;
 	}
 
+	// 実際の参加者を DB から取得
+	const dbRows = await db
+		.select({
+			userId: eventAttendee.userId,
+			nickname: profile.nickname,
+			schoolName: profile.schoolName,
+			avatarUrl: profile.avatarUrl
+		})
+		.from(eventAttendee)
+		.leftJoin(profile, eq(profile.userId, eventAttendee.userId))
+		.where(eq(eventAttendee.eventId, eventId));
+	const dbAttendees = dbRows.map((r) => ({ ...r, pastContests: [] as string[] }));
+
+	// mock イベントはモックユーザーも合算（実際の参加者が存在する userId は除外）
 	let attendees: { userId: string; nickname: string | null; schoolName: string | null; avatarUrl: string | null; pastContests: string[] }[];
 	if (isMock) {
-		attendees = MOCK_ATTENDEES;
+		const dbUserIds = new Set(dbAttendees.map((a) => a.userId));
+		const filteredMock = MOCK_ATTENDEES.filter((a) => !dbUserIds.has(a.userId));
+		attendees = [...dbAttendees, ...filteredMock];
 	} else {
-		const rows = await db
-			.select({
-				userId: eventAttendee.userId,
-				nickname: profile.nickname,
-				schoolName: profile.schoolName,
-				avatarUrl: profile.avatarUrl
-			})
-			.from(eventAttendee)
-			.leftJoin(profile, eq(profile.userId, eventAttendee.userId))
-			.where(eq(eventAttendee.eventId, eventId));
-		attendees = rows.map((r) => ({ ...r, pastContests: [] as string[] }));
+		attendees = dbAttendees;
 	}
 
 	let isAttending = false;
 	let connectionUserIds: string[] = [];
 	if (locals.user) {
-		if (!isMock) {
-			const attendance = await db
-				.select()
-				.from(eventAttendee)
-				.where(and(eq(eventAttendee.eventId, eventId), eq(eventAttendee.userId, locals.user.id)))
-				.limit(1);
-			isAttending = attendance.length > 0;
-		}
+		const attendance = await db
+			.select()
+			.from(eventAttendee)
+			.where(and(eq(eventAttendee.eventId, eventId), eq(eventAttendee.userId, locals.user.id)))
+			.limit(1);
+		isAttending = attendance.length > 0;
 
 		const conns = await db
 			.select({ targetUserId: connection.targetUserId })

@@ -14,6 +14,9 @@
 - `src/routes/calendar/[slug]/+page.server.ts`: モックイベント (mock-1〜mock-4) 用に `MOCK_ATTENDEES` を追加。各参加者に `pastContests: string[]` フィールドを持たせ、DB 参加者は `[]` で補完
 - `src/routes/calendar/[slug]/+page.svelte`: 「参加する」クリック時に過去コンテスト選択モーダルを表示 (localStorage に永続化)。共通コンテスト数で参加者をソートし「共通N個」バッジを表示
 
+#### イベント機能: 参加者をDB実データに反映
+- `src/routes/calendar/[slug]/+page.server.ts`: mock イベントでも `isAttending` を DB から取得するよう修正。参加者リストも DB の実際の参加者を優先し、未参加のモックユーザーを後続追加する方式に変更
+
 ## [Unreleased] - 2026-02-28
 
 ### Changed (UI/UX)
