@@ -33,12 +33,16 @@ export const handle: Handle = async ({ event, resolve }) => {
 		}
 
 		const cookie = event.request.headers.get('cookie') ?? '';
+		const origin =
+			event.request.headers.get('origin') ??
+			event.request.headers.get('referer')?.split('/').slice(0, 3).join('/') ??
+			event.url.origin;
+
 		const response = await fetch(sessionUrl.toString(), {
 			headers: {
 				cookie,
-				origin: event.url.origin,
-				'x-forwarded-host': event.url.host,
-				'x-forwarded-proto': event.url.protocol.replace(':', '')
+				origin,
+				'x-neon-auth-middleware': 'true'
 			}
 		});
 
@@ -55,6 +59,16 @@ export const handle: Handle = async ({ event, resolve }) => {
 			}
 		} else {
 			const text = await response.text();
+			if (text.includes('INVALID_HOSTNAME')) {
+				console.warn('[hooks] invalid hostname context:', {
+					sessionUrl: sessionUrl.toString(),
+					origin,
+					requestHost: event.request.headers.get('host'),
+					requestForwardedHost: event.request.headers.get('x-forwarded-host'),
+					requestForwardedProto: event.request.headers.get('x-forwarded-proto'),
+					urlOrigin: event.url.origin
+				});
+			}
 			console.log('[hooks] get-session error body:', text.slice(0, 200));
 		}
 	} catch (e) {
