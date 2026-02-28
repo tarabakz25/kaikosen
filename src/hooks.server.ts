@@ -4,7 +4,9 @@ import { env } from '$env/dynamic/private';
 export const handle: Handle = async ({ event, resolve }) => {
 	try {
 		const response = await fetch(`${env.NEON_AUTH_URL}/get-session`, {
-			headers: event.request.headers
+			headers: {
+				cookie: event.request.headers.get('cookie') ?? ''
+			}
 		});
 		if (response.ok) {
 			const data = await response.json();
