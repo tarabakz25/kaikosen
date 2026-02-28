@@ -1,1 +1,6 @@
-export const PAST_CONTESTS = ['高専プロコン2023', '高専プロコン2024', '高専プロコン2025', '高専ロボコン2023', '高専ロボコン2024', '高専ロボコン2025', 'DCON2023', 'DCON2024', 'DCON2025'];
+export const PAST_CONTESTS_TITLE = [
+    { title: '高専プロコン', id: 'procon' },
+    { title: '高専ロボコン', id: 'robocon' },
+    { title: '高専DCON', id: 'dcon' },
+    { title: '起業家甲子園', id: 'entrepreneur' }
+];

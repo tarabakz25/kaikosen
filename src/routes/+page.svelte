@@ -43,13 +43,13 @@
 
     const link = g.append('g').selectAll('line')
       .data(edges).enter().append('line')
-      .attr('stroke', '#374151').attr('stroke-width', 1.5);
+      .attr('stroke', '#d1d5db').attr('stroke-width', 1.5);
 
     const node = g.append('g').selectAll('circle')
       .data(nodes).enter().append('circle')
       .attr('r', 18)
       .attr('fill', (d) => schoolColor(d.schoolName))
-      .attr('stroke', '#1f2937').attr('stroke-width', 2)
+      .attr('stroke', '#8FC1B5').attr('stroke-width', 2)
       .style('cursor', 'pointer')
       .on('click', (_, d) => { selectedNode = d; });
 
@@ -57,7 +57,7 @@
       .data(nodes).enter().append('text')
       .text((d) => d.nickname)
       .attr('text-anchor', 'middle').attr('dy', 32)
-      .attr('fill', '#d1d5db').attr('font-size', 11)
+      .attr('fill', '#1f2937').attr('font-size', 11)
       .style('pointer-events', 'none');
 
     sim.on('tick', () => {
@@ -81,7 +81,7 @@
   <svg bind:this={svgEl} class="w-full h-full"></svg>
 
   {#if data.userProfile && (data.userProfile as any).tags?.length === 0}
-    <div class="absolute top-4 left-4 right-4 bg-indigo-900/80 text-indigo-200 text-sm px-4 py-3 rounded-xl">
+    <div class="absolute top-4 left-4 right-4 bg-kaiko-accent-muted/90 text-kaiko-accent-dark text-sm px-4 py-3 rounded-xl border border-kaiko-accent/30">
       プロフィールを設定してグラフに表示されよう →
       <a href="/account" class="underline font-medium">設定</a>
     </div>
@@ -89,23 +89,23 @@
 </div>
 
 {#if selectedNode}
-  <div class="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4" onclick={() => selectedNode = null}>
-    <div class="bg-gray-900 rounded-2xl w-full max-w-lg p-6" onclick={(e) => e.stopPropagation()}>
+  <div class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4" onclick={() => selectedNode = null}>
+    <div class="bg-kaiko-surface rounded-2xl w-full max-w-lg p-6 shadow-xl border border-kaiko-border" onclick={(e) => e.stopPropagation()}>
       <div class="flex items-center gap-4 mb-4">
         <div class="w-14 h-14 rounded-full flex items-center justify-center text-xl font-bold text-white" style="background-color: {schoolColor(selectedNode.schoolName)}">
           {selectedNode.nickname[0]}
         </div>
         <div>
-          <h2 class="text-xl font-bold text-white">{selectedNode.nickname}</h2>
-          <p class="text-gray-400">{selectedNode.schoolName}</p>
+          <h2 class="text-xl font-bold text-kaiko-text">{selectedNode.nickname}</h2>
+          <p class="text-kaiko-muted">{selectedNode.schoolName}</p>
         </div>
       </div>
       <div class="flex flex-wrap gap-1.5">
         {#each selectedNode.tags as tag}
-          <span class="text-sm bg-indigo-900 text-indigo-300 px-3 py-1 rounded-full">#{tag}</span>
+          <span class="text-sm bg-kaiko-accent-muted text-kaiko-accent-dark px-3 py-1 rounded-full">#{tag}</span>
         {/each}
       </div>
-      <button onclick={() => selectedNode = null} class="mt-4 w-full py-3 rounded-xl border border-gray-700 text-gray-400 hover:text-white transition-colors">
+      <button onclick={() => selectedNode = null} class="mt-4 w-full py-3 rounded-xl border border-kaiko-border text-kaiko-muted hover:text-kaiko-text hover:bg-kaiko-surface-alt transition-colors">
         閉じる
       </button>
     </div>

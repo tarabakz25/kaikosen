@@ -1,23 +1,40 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import { PAST_CONTESTS } from '$lib/contests';
+	import { PAST_CONTESTS_TITLE } from '$lib/contests';
 
 	let { data } = $props();
+
+	const currentYear = new Date().getFullYear();
+	const years = Array.from({ length: currentYear - 1960 }, (_, i) => currentYear - i);
 
 	let nickname = $state(data.userProfile?.nickname ?? '');
 	let schoolName = $state(data.userProfile?.schoolName ?? '');
 	let tagInput = $state('');
 	let tags = $state<string[]>(data.userProfile?.tags ?? []);
 	let pastContests = $state<string[]>(data.userProfile?.pastContests ?? []);
+	let selectedContestId = $state(PAST_CONTESTS_TITLE[0].id);
+	let selectedYear = $state(currentYear);
 	let saving = $state(false);
 	let message = $state('');
 
-	function toggleContest(contest: string) {
-		if (pastContests.includes(contest)) {
-			pastContests = pastContests.filter((c) => c !== contest);
-		} else {
-			pastContests = [...pastContests, contest];
+	function addPastContest() {
+		const entry = `${selectedContestId}-${selectedYear}`;
+		if (!pastContests.includes(entry)) {
+			pastContests = [...pastContests, entry];
 		}
+	}
+
+	function removePastContest(entry: string) {
+		pastContests = pastContests.filter((c) => c !== entry);
+	}
+
+	function formatPastContest(entry: string): string {
+		const i = entry.lastIndexOf('-');
+		if (i === -1) return `${entry} (年不明)`;
+		const contestId = entry.slice(0, i);
+		const year = entry.slice(i + 1);
+		const contest = PAST_CONTESTS_TITLE.find((c) => c.id === contestId);
+		return `${contest?.title ?? contestId} (${year}年)`;
 	}
 
 	function addTag() {
@@ -60,40 +77,42 @@
 	}
 </script>
 
-<div class="max-w-lg mx-auto px-4 py-8">
-	<div class="flex items-center gap-3 mb-6">
-		<a href="/account" class="text-gray-400 hover:text-white transition-colors">← 戻る</a>
-		<h1 class="text-2xl font-bold text-white">プロフィール編集</h1>
+<div class="mx-auto max-w-lg px-4 py-8">
+	<div class="mb-6 flex items-center gap-3">
+		<a href="/account" class="text-kaiko-muted transition-colors hover:text-kaiko-text">← 戻る</a>
+		<h1 class="text-2xl font-bold text-kaiko-text">プロフィール編集</h1>
 	</div>
 
 	<div class="space-y-4">
 		<div>
-			<label class="mb-1 block text-sm font-medium text-gray-300">ニックネーム</label>
+			<label class="mb-1 block text-sm font-medium text-kaiko-muted">ニックネーム</label>
 			<input
 				bind:value={nickname}
 				type="text"
 				placeholder="例: 田中太郎"
-				class="w-full rounded-lg border border-gray-700 bg-gray-800 px-4 py-3 text-white placeholder-gray-500 focus:border-indigo-500 focus:outline-none"
+				class="w-full rounded-lg border border-kaiko-border bg-kaiko-surface px-4 py-3 text-kaiko-text placeholder-kaiko-muted focus:border-kaiko-accent focus:outline-none"
 			/>
 		</div>
 
 		<div>
-			<label class="mb-1 block text-sm font-medium text-gray-300">高専名</label>
+			<label class="mb-1 block text-sm font-medium text-kaiko-muted">高専名</label>
 			<input
 				bind:value={schoolName}
 				type="text"
 				placeholder="例: 東京高専"
-				class="w-full rounded-lg border border-gray-700 bg-gray-800 px-4 py-3 text-white placeholder-gray-500 focus:border-indigo-500 focus:outline-none"
+				class="w-full rounded-lg border border-kaiko-border bg-kaiko-surface px-4 py-3 text-kaiko-text placeholder-kaiko-muted focus:border-kaiko-accent focus:outline-none"
 			/>
 		</div>
 
 		<div>
-			<label class="mb-1 block text-sm font-medium text-gray-300">タグ（スキル・興味）</label>
+			<label class="mb-1 block text-sm font-medium text-kaiko-muted">タグ（スキル・興味）</label>
 			<div class="mb-2 flex flex-wrap gap-2">
 				{#each tags as tag}
-					<span class="flex items-center gap-1 rounded-full bg-indigo-900 px-3 py-1 text-sm text-indigo-200">
+					<span
+						class="flex items-center gap-1 rounded-full bg-kaiko-accent-muted px-3 py-1 text-sm text-kaiko-accent-dark"
+					>
 						#{tag}
-						<button onclick={() => removeTag(tag)} class="ml-1 hover:text-white">×</button>
+						<button onclick={() => removeTag(tag)} class="ml-1 hover:text-kaiko-text">×</button>
 					</span>
 				{/each}
 			</div>
@@ -103,38 +122,63 @@
 				onblur={addTag}
 				type="text"
 				placeholder="タグを入力してEnter (例: Rust, ロボット)"
-				class="w-full rounded-lg border border-gray-700 bg-gray-800 px-4 py-3 text-white placeholder-gray-500 focus:border-indigo-500 focus:outline-none"
+				class="w-full rounded-lg border border-kaiko-border bg-kaiko-surface px-4 py-3 text-kaiko-text placeholder-kaiko-muted focus:border-kaiko-accent focus:outline-none"
 			/>
 		</div>
 
 		<div>
-			<p class="mb-2 text-sm font-medium text-gray-300">参加したことのあるコンテスト</p>
+			<p class="mb-2 text-sm font-medium text-kaiko-muted">参加したことのあるコンテスト</p>
+			<div class="mb-3 flex flex-wrap gap-2">
+				<select
+					bind:value={selectedContestId}
+					class="rounded-lg border border-kaiko-border bg-kaiko-surface px-3 py-2 text-sm text-kaiko-text focus:border-kaiko-accent focus:outline-none"
+				>
+					{#each PAST_CONTESTS_TITLE as contest}
+						<option value={contest.id}>{contest.title}</option>
+					{/each}
+				</select>
+				<select
+					bind:value={selectedYear}
+					class="rounded-lg border border-kaiko-border bg-kaiko-surface px-3 py-2 text-sm text-kaiko-text focus:border-kaiko-accent focus:outline-none"
+				>
+					{#each years as y}
+						<option value={y}>{y}年</option>
+					{/each}
+				</select>
+				<button
+					type="button"
+					onclick={addPastContest}
+					class="rounded-lg bg-kaiko-accent px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-kaiko-accent-hover"
+				>
+					追加
+				</button>
+			</div>
 			<div class="flex flex-col gap-2">
-				{#each PAST_CONTESTS as contest}
-					<button
-						type="button"
-						onclick={() => toggleContest(contest)}
-						class="flex items-center gap-3 rounded-xl border px-4 py-3 transition-colors {pastContests.includes(contest) ? 'border-indigo-500 bg-indigo-950 text-white' : 'border-gray-700 text-gray-400'}"
+				{#each pastContests as entry}
+					<div
+						class="flex items-center justify-between rounded-xl border border-kaiko-border bg-kaiko-surface px-4 py-3"
 					>
-						<span class="flex h-4 w-4 shrink-0 items-center justify-center rounded border {pastContests.includes(contest) ? 'border-indigo-500 bg-indigo-500' : 'border-gray-600'}">
-							{#if pastContests.includes(contest)}
-								<svg class="h-3 w-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
-							{/if}
-						</span>
-						<span class="text-sm">{contest}</span>
-					</button>
+						<span class="text-sm text-kaiko-text">{formatPastContest(entry)}</span>
+						<button
+							type="button"
+							onclick={() => removePastContest(entry)}
+							class="text-kaiko-muted transition-colors hover:text-red-500"
+						>
+							×
+						</button>
+					</div>
 				{/each}
 			</div>
 		</div>
 
 		{#if message}
-			<p class="text-sm text-red-400">{message}</p>
+			<p class="text-sm text-red-500">{message}</p>
 		{/if}
 
 		<button
 			onclick={save}
 			disabled={saving || !nickname || !schoolName}
-			class="w-full rounded-lg bg-indigo-600 py-3 font-semibold text-white transition-colors hover:bg-indigo-500 disabled:bg-gray-700 disabled:text-gray-500"
+			class="w-full rounded-lg bg-kaiko-accent py-3 font-semibold text-white transition-colors hover:bg-kaiko-accent-hover disabled:bg-kaiko-border disabled:text-kaiko-muted"
 		>
 			{saving ? '保存中...' : '保存する'}
 		</button>

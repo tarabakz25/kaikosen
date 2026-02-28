@@ -1,1 +1,34 @@
 @import 'tailwindcss';
+
+/* Base - theme colors applied via data-theme */
+html {
+	background-color: var(--color-kaiko-bg);
+}
+
+/* Light theme (default) - base: #8FC1B5 */
+@theme {
+  --color-kaiko-bg: #F9F7F3;
+  --color-kaiko-surface: #FFFFFF;
+  --color-kaiko-surface-alt: #F0EDE8;
+  --color-kaiko-text: #1f2937;
+  --color-kaiko-muted: #6b7280;
+  --color-kaiko-border: #d1d5db;
+  --color-kaiko-accent: #8FC1B5;
+  --color-kaiko-accent-hover: #7AB8A9;
+  --color-kaiko-accent-muted: #B8E0D8;
+  --color-kaiko-accent-dark: #5A9A8E;
+}
+
+/* Dark theme */
+[data-theme='dark'] {
+  --color-kaiko-bg: #111827;
+  --color-kaiko-surface: #1f2937;
+  --color-kaiko-surface-alt: #374151;
+  --color-kaiko-text: #f9fafb;
+  --color-kaiko-muted: #9ca3af;
+  --color-kaiko-border: #374151;
+  --color-kaiko-accent: #8FC1B5;
+  --color-kaiko-accent-hover: #9FCFC5;
+  --color-kaiko-accent-muted: #374151;
+  --color-kaiko-accent-dark: #B8E0D8;
+}

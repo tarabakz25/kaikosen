@@ -1,99 +1,196 @@
 <script lang="ts">
-  import { goto } from '$app/navigation';
+	import { goto } from '$app/navigation';
 
-  let { data } = $props();
-  let isAttending = $state(data.isAttending);
-  let loading = $state(false);
+	type FellowAttendee = { userId: string; nickname: string | null; avatarUrl: string | null };
 
-  const myPastContests = data.userProfile?.pastContests ?? [];
+	let { data } = $props();
+	let isAttending = $state(data.isAttending);
+	let loading = $state(false);
+	let showThankYouPopup = $state(false);
+	let fellowAttendees = $state<FellowAttendee[]>([]);
+	let fellowLoading = $state(false);
 
-  function formatDate(d: Date | string | null) {
-    if (!d) return '';
-    return new Date(d).toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long', hour: '2-digit', minute: '2-digit' });
-  }
+	const myPastContests = data.userProfile?.pastContests ?? [];
 
-  const sortedAttendees = $derived(
-    [...data.attendees].sort((a, b) => {
-      const commonA = (a.pastContests ?? []).filter((c) => myPastContests.includes(c)).length;
-      const commonB = (b.pastContests ?? []).filter((c) => myPastContests.includes(c)).length;
-      return commonB - commonA;
-    })
-  );
+	function formatDate(d: Date | string | null) {
+		if (!d) return '';
+		return new Date(d).toLocaleDateString('ja-JP', {
+			year: 'numeric',
+			month: 'long',
+			day: 'numeric',
+			weekday: 'long',
+			hour: '2-digit',
+			minute: '2-digit'
+		});
+	}
 
-  function commonCount(pastContests: string[] | null) {
-    return (pastContests ?? []).filter((c) => myPastContests.includes(c)).length;
-  }
+	const sortedAttendees = $derived(
+		[...data.attendees].sort((a, b) => {
+			const commonA = (a.pastContests ?? []).filter((c) => myPastContests.includes(c)).length;
+			const commonB = (b.pastContests ?? []).filter((c) => myPastContests.includes(c)).length;
+			return commonB - commonA;
+		})
+	);
 
-  async function toggleAttend() {
-    if (!data.userId) { goto('/login'); return; }
-    loading = true;
-    const res = await fetch(`/api/events/${data.event.id}/attend`, { method: 'POST' });
-    if (res.ok) {
-      const body = await res.json();
-      isAttending = body.attending;
-    }
-    loading = false;
-  }
+	function commonCount(pastContests: string[] | null) {
+		return (pastContests ?? []).filter((c) => myPastContests.includes(c)).length;
+	}
+
+	async function toggleAttend() {
+		if (!data.userId) {
+			goto('/login');
+			return;
+		}
+		loading = true;
+		const res = await fetch(`/api/events/${data.event.id}/attend`, { method: 'POST' });
+		if (res.ok) {
+			const body = await res.json();
+			const wasNotAttending = !isAttending;
+			isAttending = body.attending;
+			if (wasNotAttending && body.attending) {
+				showThankYouPopup = true;
+				fellowLoading = true;
+				const fellowRes = await fetch(`/api/events/${data.event.id}/fellow-attendees`);
+				if (fellowRes.ok) {
+					fellowAttendees = await fellowRes.json();
+				}
+				fellowLoading = false;
+			}
+		}
+		loading = false;
+	}
 </script>
 
-<div class="max-w-lg mx-auto px-4 py-6">
-  <a href="/calendar" class="text-gray-400 hover:text-white text-sm mb-4 inline-block">← 戻る</a>
+<div class="mx-auto max-w-lg px-4 py-6">
+	<a href="/calendar" class="mb-4 inline-block text-sm text-kaiko-muted hover:text-kaiko-text"
+		>← 戻る</a
+	>
 
-  <h1 class="text-2xl font-bold text-white mb-2">{data.event.title}</h1>
+	<h1 class="mb-2 text-2xl font-bold text-kaiko-text">{data.event.title}</h1>
 
-  <div class="space-y-1 mb-4">
-    <p class="text-gray-300">🗓 {formatDate(data.event.startAt)}</p>
-    {#if data.event.endAt}
-      <p class="text-gray-400 text-sm">〜 {formatDate(data.event.endAt)}</p>
-    {/if}
-    {#if data.event.location}
-      <p class="text-gray-300">📍 {data.event.location}</p>
-    {/if}
-  </div>
+	<div class="mb-4 space-y-1">
+		<p class="text-kaiko-text">🗓 {formatDate(data.event.startAt)}</p>
+		{#if data.event.endAt}
+			<p class="text-sm text-kaiko-muted">〜 {formatDate(data.event.endAt)}</p>
+		{/if}
+		{#if data.event.location}
+			<p class="text-kaiko-text">📍 {data.event.location}</p>
+		{/if}
+	</div>
 
-  {#if data.event.description}
-    <p class="text-gray-300 mb-4 whitespace-pre-line">{data.event.description}</p>
-  {/if}
+	{#if data.event.description}
+		<p class="mb-4 whitespace-pre-line text-kaiko-text">{data.event.description}</p>
+	{/if}
 
-  <div class="flex gap-3 mb-6">
-    {#if data.event.url}
-      <a href={data.event.url} target="_blank" rel="noopener" class="flex-1 text-center bg-gray-800 hover:bg-gray-700 text-white py-3 rounded-xl font-medium transition-colors">
-        詳細ページ ↗
-      </a>
-    {/if}
-    {#if data.userId}
-      <button
-        onclick={toggleAttend}
-        disabled={loading}
-        class="flex-1 py-3 rounded-xl font-semibold transition-colors {isAttending ? 'bg-red-900 hover:bg-red-800 text-red-200' : 'bg-indigo-600 hover:bg-indigo-500 text-white'}"
-      >
-        {isAttending ? '参加を取り消す' : '参加する'}
-      </button>
-    {/if}
-  </div>
+	<div class="mb-6 flex gap-3">
+		{#if data.event.url}
+			<a
+				href={data.event.url}
+				target="_blank"
+				rel="noopener"
+				class="flex-1 rounded-xl border border-kaiko-border bg-kaiko-surface-alt py-3 text-center font-medium text-kaiko-text transition-colors hover:bg-kaiko-accent-muted"
+			>
+				詳細ページ ↗
+			</a>
+		{/if}
+		{#if data.userId}
+			<button
+				onclick={toggleAttend}
+				disabled={loading}
+				class="flex-1 rounded-xl py-3 font-semibold transition-colors {isAttending
+					? 'bg-red-100 text-red-700 hover:bg-red-200'
+					: 'bg-kaiko-accent text-white hover:bg-kaiko-accent-hover'}"
+			>
+				{isAttending ? '参加を取り消す' : '参加する'}
+			</button>
+		{/if}
+	</div>
 
-  <h2 class="text-lg font-semibold text-white mb-3">参加者 ({data.attendees.length}人)</h2>
-  <div class="space-y-2">
-    {#each sortedAttendees as attendee}
-      {@const isConnection = data.connectionUserIds.includes(attendee.userId)}
-      {@const common = commonCount(attendee.pastContests)}
-      <div class="flex items-center gap-3 bg-gray-900 rounded-lg px-4 py-3">
-        <div class="w-8 h-8 rounded-full bg-indigo-700 flex items-center justify-center text-sm font-bold text-white shrink-0">
-          {attendee.nickname?.[0] ?? '?'}
-        </div>
-        <div class="flex-1 min-w-0">
-          <p class="text-white font-medium truncate">{attendee.nickname ?? '不明'}</p>
-          <p class="text-gray-400 text-xs truncate">{attendee.schoolName ?? ''}</p>
-        </div>
-        <div class="flex gap-1 shrink-0">
-          {#if common > 0}
-            <span class="text-xs bg-yellow-900 text-yellow-300 px-2 py-0.5 rounded-full">共通{common}個</span>
-          {/if}
-          {#if isConnection}
-            <span class="text-xs bg-green-900 text-green-300 px-2 py-0.5 rounded-full">繋がり</span>
-          {/if}
-        </div>
-      </div>
-    {/each}
-  </div>
+	<h2 class="mb-3 text-lg font-semibold text-kaiko-text">参加者 ({data.attendees.length}人)</h2>
+	<div class="space-y-2">
+		{#each sortedAttendees as attendee}
+			{@const isConnection = data.connectionUserIds.includes(attendee.userId)}
+			{@const common = commonCount(attendee.pastContests)}
+			<div
+				class="flex items-center gap-3 rounded-lg border border-kaiko-border bg-kaiko-surface px-4 py-3"
+			>
+				<div
+					class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-kaiko-accent text-sm font-bold text-white"
+				>
+					{attendee.nickname?.[0] ?? '?'}
+				</div>
+				<div class="min-w-0 flex-1">
+					<p class="truncate font-medium text-kaiko-text">{attendee.nickname ?? '不明'}</p>
+					<p class="truncate text-xs text-kaiko-muted">{attendee.schoolName ?? ''}</p>
+				</div>
+				<div class="flex shrink-0 gap-1">
+					{#if common > 0}
+						<span class="rounded-full bg-amber-100 px-2 py-0.5 text-xs text-amber-800"
+							>共通{common}個</span
+						>
+					{/if}
+					{#if isConnection}
+						<span class="rounded-full bg-emerald-100 px-2 py-0.5 text-xs text-emerald-800"
+							>繋がり</span
+						>
+					{/if}
+				</div>
+			</div>
+		{/each}
+	</div>
 </div>
+
+{#if showThankYouPopup}
+	<div
+		class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+		role="dialog"
+		aria-modal="true"
+		aria-labelledby="thank-you-title"
+	>
+		<div
+			class="w-full max-w-sm rounded-2xl border border-kaiko-border bg-kaiko-surface p-6 text-center shadow-xl"
+		>
+			<h2 id="thank-you-title" class="mb-4 text-xl font-bold text-kaiko-text">
+				イベントへの参加が完了しました
+			</h2>
+			<p class="mb-4 text-sm text-kaiko-muted">
+				ご参加いただきありがとうございます！
+			</p>
+			<p class="mb-3 text-sm text-kaiko-muted">この人...見たことあるかも</p>
+			<div class="mb-6 max-h-40 overflow-y-auto rounded-xl border border-kaiko-border bg-kaiko-bg">
+				{#if fellowLoading}
+					<p class="py-6 text-center text-sm text-kaiko-muted">読み込み中...</p>
+				{:else if fellowAttendees.length === 0}
+					<p class="py-6 text-center text-sm text-kaiko-muted">他のイベントで会った人はいません</p>
+				{:else}
+					<div class="divide-y divide-kaiko-border">
+						{#each fellowAttendees as person}
+							<div class="flex items-center gap-3 px-4 py-3">
+								{#if person.avatarUrl}
+									<img
+										src={person.avatarUrl}
+										alt=""
+										class="h-10 w-10 shrink-0 rounded-full object-cover"
+									/>
+								{:else}
+									<div
+										class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-kaiko-accent text-sm font-bold text-white"
+									>
+										{person.nickname?.[0] ?? '?'}
+									</div>
+								{/if}
+								<p class="truncate font-medium text-kaiko-text">{person.nickname ?? '不明'}</p>
+							</div>
+						{/each}
+					</div>
+				{/if}
+			</div>
+			<a
+				href="/calendar"
+				class="block w-full rounded-xl bg-kaiko-accent py-3 font-semibold text-white transition-colors hover:bg-kaiko-accent-hover"
+			>
+				イベント一覧に戻る
+			</a>
+		</div>
+	</div>
+{/if}

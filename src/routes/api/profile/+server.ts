@@ -1,7 +1,8 @@
 import type { RequestHandler } from './$types';
 import { db } from '$lib/server/db';
-import { profile } from '$lib/server/db/schema';
-import { eq } from 'drizzle-orm';
+import { profile, eventAttendee } from '$lib/server/db/schema';
+import { eq, and, or, like } from 'drizzle-orm';
+import { PAST_CONTESTS_TITLE } from '$lib/contests';
 
 export const POST: RequestHandler = async ({ request, locals }) => {
 	if (!locals.user) {
@@ -16,14 +17,17 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		pastContests: string[];
 	};
 
+	const pastContestsList = pastContests ?? [];
+	const userId = locals.user.id;
+
 	const [upserted] = await db
 		.insert(profile)
 		.values({
-			userId: locals.user.id,
+			userId,
 			nickname,
 			schoolName,
 			tags,
-			pastContests: pastContests ?? []
+			pastContests: pastContestsList
 		})
 		.onConflictDoUpdate({
 			target: profile.userId,
@@ -31,11 +35,32 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 				nickname,
 				schoolName,
 				tags,
-				pastContests: pastContests ?? [],
+				pastContests: pastContestsList,
 				updatedAt: new Date()
 			}
 		})
 		.returning();
+
+	// event_attendee に {id}-{year} 形式でコンテスト参加を登録
+	const contestIds = PAST_CONTESTS_TITLE.map((c) => c.id);
+	await db
+		.delete(eventAttendee)
+		.where(
+			and(
+				eq(eventAttendee.userId, userId),
+				or(...contestIds.map((id) => like(eventAttendee.eventId, `${id}-%`)))
+			)
+		);
+
+	for (const entry of pastContestsList) {
+		// {id}-{year} 形式のみ登録（コンテストIDと年で構成）
+		if (/^[a-z]+-\d{4}$/.test(entry)) {
+			await db
+				.insert(eventAttendee)
+				.values({ eventId: entry, userId })
+				.onConflictDoNothing({ target: [eventAttendee.eventId, eventAttendee.userId] });
+		}
+	}
 
 	return Response.json(upserted);
 };
