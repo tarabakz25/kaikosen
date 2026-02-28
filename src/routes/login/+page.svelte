@@ -9,15 +9,15 @@
   }
 </script>
 
-<div class="min-h-screen flex flex-col items-center justify-center bg-gray-950 px-4">
+<div class="min-h-screen flex flex-col items-center justify-center bg-kaiko-bg px-4">
   <div class="text-center mb-12">
-    <h1 class="text-4xl font-bold text-white mb-2">kaikosen</h1>
-    <p class="text-gray-400 text-lg">高専生のためのネットワーキングアプリ</p>
+    <h1 class="text-4xl font-bold text-kaiko-text mb-2">kaikosen</h1>
+    <p class="text-kaiko-muted text-lg">高専生のためのネットワーキングアプリ</p>
   </div>
 
   <button
     onclick={signInWithGoogle}
-    class="flex items-center gap-3 bg-white text-gray-900 font-semibold px-8 py-4 rounded-xl hover:bg-gray-100 transition-colors shadow-lg"
+    class="flex items-center gap-3 bg-kaiko-surface text-kaiko-text font-semibold px-8 py-4 rounded-xl hover:bg-kaiko-surface-alt transition-colors shadow-lg border border-kaiko-border"
   >
     <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
       <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
