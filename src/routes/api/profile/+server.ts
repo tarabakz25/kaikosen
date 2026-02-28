@@ -9,10 +9,11 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 	}
 
 	const body = await request.json();
-	const { nickname, schoolName, tags } = body as {
+	const { nickname, schoolName, tags, pastContests } = body as {
 		nickname: string;
 		schoolName: string;
 		tags: string[];
+		pastContests: string[];
 	};
 
 	const [upserted] = await db
@@ -21,7 +22,8 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 			userId: locals.user.id,
 			nickname,
 			schoolName,
-			tags
+			tags,
+			pastContests: pastContests ?? []
 		})
 		.onConflictDoUpdate({
 			target: profile.userId,
@@ -29,6 +31,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 				nickname,
 				schoolName,
 				tags,
+				pastContests: pastContests ?? [],
 				updatedAt: new Date()
 			}
 		})

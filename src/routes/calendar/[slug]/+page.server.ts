@@ -51,17 +51,6 @@ const MOCK_EVENTS = [
 	}
 ];
 
-const MOCK_ATTENDEES = [
-	{ userId: 'mock-a', nickname: '田中雄大', schoolName: '東京高専', avatarUrl: null, pastContests: ['高専プロコン', '高専ロボコン'] },
-	{ userId: 'mock-b', nickname: '佐藤美咲', schoolName: '大阪高専', avatarUrl: null, pastContests: ['高専ハッカソン', '競技プログラミング'] },
-	{ userId: 'mock-c', nickname: '山田健太', schoolName: '名古屋高専', avatarUrl: null, pastContests: ['高専プロコン', '高専ハッカソン', '競技プログラミング'] },
-	{ userId: 'mock-d', nickname: '鈴木あかり', schoolName: '福岡高専', avatarUrl: null, pastContests: ['高専ロボコン', '競技プログラミング'] },
-	{ userId: 'mock-e', nickname: '伊藤拓海', schoolName: '仙台高専', avatarUrl: null, pastContests: ['高専プロコン', '高専生交流LT'] },
-	{ userId: 'mock-f', nickname: '高橋莉子', schoolName: '神戸高専', avatarUrl: null, pastContests: ['高専ハッカソン', '高専生交流LT'] },
-	{ userId: 'mock-g', nickname: '中村大輔', schoolName: '広島高専', avatarUrl: null, pastContests: ['競技プログラミング'] },
-	{ userId: 'mock-h', nickname: '小林ゆい', schoolName: '北海道高専', avatarUrl: null, pastContests: ['高専プロコン', '高専ロボコン', '高専ハッカソン'] }
-];
-
 export const load: PageServerLoad = async ({ locals, params }) => {
 	const eventId = params.slug;
 	const isMock = eventId.startsWith('mock-');
@@ -77,28 +66,17 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 		ev = dbEv;
 	}
 
-	// 実際の参加者を DB から取得
-	const dbRows = await db
+	const attendees = await db
 		.select({
 			userId: eventAttendee.userId,
 			nickname: profile.nickname,
 			schoolName: profile.schoolName,
-			avatarUrl: profile.avatarUrl
+			avatarUrl: profile.avatarUrl,
+			pastContests: profile.pastContests
 		})
 		.from(eventAttendee)
 		.leftJoin(profile, eq(profile.userId, eventAttendee.userId))
 		.where(eq(eventAttendee.eventId, eventId));
-	const dbAttendees = dbRows.map((r) => ({ ...r, pastContests: [] as string[] }));
-
-	// mock イベントはモックユーザーも合算（実際の参加者が存在する userId は除外）
-	let attendees: { userId: string; nickname: string | null; schoolName: string | null; avatarUrl: string | null; pastContests: string[] }[];
-	if (isMock) {
-		const dbUserIds = new Set(dbAttendees.map((a) => a.userId));
-		const filteredMock = MOCK_ATTENDEES.filter((a) => !dbUserIds.has(a.userId));
-		attendees = [...dbAttendees, ...filteredMock];
-	} else {
-		attendees = dbAttendees;
-	}
 
 	let isAttending = false;
 	let connectionUserIds: string[] = [];

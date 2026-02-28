@@ -14,6 +14,16 @@
 - `src/routes/calendar/[slug]/+page.server.ts`: モックイベント (mock-1〜mock-4) 用に `MOCK_ATTENDEES` を追加。各参加者に `pastContests: string[]` フィールドを持たせ、DB 参加者は `[]` で補完
 - `src/routes/calendar/[slug]/+page.svelte`: 「参加する」クリック時に過去コンテスト選択モーダルを表示 (localStorage に永続化)。共通コンテスト数で参加者をソートし「共通N個」バッジを表示
 
+#### プロフィール: 過去コンテスト参加記録の設定
+- `src/lib/server/db/schema.ts`: `profile` テーブルに `pastContests text[]` カラムを追加
+- `src/lib/contests.ts`: `PAST_CONTESTS` 定数を共有モジュールとして切り出し
+- `src/routes/api/profile/+server.ts`: `pastContests` フィールドを受け取って保存
+- `src/routes/account/edit/+page.svelte`: 過去コンテスト選択チェックボックスUI を追加
+
+#### イベント機能: モックユーザー削除・プロフィール連携
+- `src/routes/calendar/[slug]/+page.server.ts`: MOCK_ATTENDEES を完全削除。参加者クエリに `pastContests` を追加
+- `src/routes/calendar/[slug]/+page.svelte`: localStorage/モーダルを廃止。自分のプロフィールの `pastContests` を使って共通コンテスト数を計算・ソート・バッジ表示
+
 #### イベント機能: 参加者をDB実データに反映
 - `src/routes/calendar/[slug]/+page.server.ts`: mock イベントでも `isAttending` を DB から取得するよう修正。参加者リストも DB の実際の参加者を優先し、未参加のモックユーザーを後続追加する方式に変更
 
