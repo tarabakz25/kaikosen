@@ -1,7 +1,7 @@
 import type { RequestHandler } from './$types';
 import { db } from '$lib/server/db';
 import { connection, profile } from '$lib/server/db/schema';
-import { eq } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 
 export const GET: RequestHandler = async ({ locals }) => {
 	if (!locals.user) {
@@ -37,14 +37,22 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 	const body = await request.json();
 	const { targetUserId, alias } = body as { targetUserId: string; alias: string };
 
+	const userId = locals.user.id;
+
 	const [newConnection] = await db
 		.insert(connection)
-		.values({
-			userId: locals.user.id,
-			targetUserId,
-			alias
-		})
+		.values({ userId, targetUserId, alias })
 		.returning();
+
+	// B→A の逆方向が存在しなければ自動作成
+	const existing = await db
+		.select()
+		.from(connection)
+		.where(and(eq(connection.userId, targetUserId), eq(connection.targetUserId, userId)))
+		.limit(1);
+	if (existing.length === 0) {
+		await db.insert(connection).values({ userId: targetUserId, targetUserId: userId, alias: '' });
+	}
 
 	return Response.json(newConnection, { status: 201 });
 };

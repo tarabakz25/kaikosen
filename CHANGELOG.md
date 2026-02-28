@@ -1,5 +1,19 @@
 # Changelog
 
+## [Unreleased] - 2026-03-01
+
+### Added / Fixed
+
+#### つながり機能: 双方向接続の自動作成
+- `src/routes/api/connections/+server.ts`: POST 時に A→B を作成後、B→A の逆方向 connection が存在しなければ自動挿入。グラフがスキャンした側・された側の両方に反映される
+
+#### QRカード機能: タブ切替後の再描画修正
+- `src/routes/card/+page.svelte`: QR描画を `onMount` から `$effect` に変更。スキャンタブへ切替後に表示タブへ戻ってもキャンバスバインディングが再評価され QR が再描画される
+
+#### イベント機能: 過去コンテスト共通参加者表示
+- `src/routes/calendar/[slug]/+page.server.ts`: モックイベント (mock-1〜mock-4) 用に `MOCK_ATTENDEES` を追加。各参加者に `pastContests: string[]` フィールドを持たせ、DB 参加者は `[]` で補完
+- `src/routes/calendar/[slug]/+page.svelte`: 「参加する」クリック時に過去コンテスト選択モーダルを表示 (localStorage に永続化)。共通コンテスト数で参加者をソートし「共通N個」バッジを表示
+
 ## [Unreleased] - 2026-02-28
 
 ### Changed (UI/UX)

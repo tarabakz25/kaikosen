@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount, onDestroy } from 'svelte';
+  import { onDestroy } from 'svelte';
   import QRCode from 'qrcode';
   import jsQR from 'jsqr';
   import { goto } from '$app/navigation';
@@ -19,7 +19,7 @@
 
   const userId = data.user?.id;
 
-  onMount(() => {
+  $effect(() => {
     if (canvas && userId) {
       const url = `${location.origin}/connect?uid=${userId}`;
       QRCode.toCanvas(canvas, url, { width: 240, margin: 2, color: { dark: '#ffffff', light: '#111827' } });
