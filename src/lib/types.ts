@@ -11,4 +11,4 @@ export type Event = {
 };
 export type EventAttendee = { eventId: string; userId: string; joinedAt: Date; };
 export type GraphNode = { id: string; nickname: string; schoolName: string; tags: string[]; avatarUrl: string | null; };
-export type GraphEdge = { source: string; target: string; alias: string; };
+export type GraphEdge = { source: string; target: string; alias: string; sharedEventCount: number; };

@@ -4,6 +4,7 @@
   let { data } = $props();
   let isAttending = $state(data.isAttending);
   let loading = $state(false);
+  let localAttendees = $state([...data.attendees]);
 
   const myPastContests = data.userProfile?.pastContests ?? [];
 
@@ -13,7 +14,7 @@
   }
 
   const sortedAttendees = $derived(
-    [...data.attendees].sort((a, b) => {
+    [...localAttendees].sort((a, b) => {
       const commonA = (a.pastContests ?? []).filter((c) => myPastContests.includes(c)).length;
       const commonB = (b.pastContests ?? []).filter((c) => myPastContests.includes(c)).length;
       return commonB - commonA;
@@ -27,10 +28,33 @@
   async function toggleAttend() {
     if (!data.userId) { goto('/login'); return; }
     loading = true;
+
+    const prevAttendees = [...localAttendees];
+    const prevAttending = isAttending;
+
+    // 楽観的更新
+    if (!isAttending) {
+      isAttending = true;
+      localAttendees = [...localAttendees, {
+        userId: data.userId,
+        nickname: data.userProfile?.nickname ?? null,
+        schoolName: data.userProfile?.schoolName ?? null,
+        avatarUrl: data.userProfile?.avatarUrl ?? null,
+        pastContests: data.userProfile?.pastContests ?? null
+      }];
+    } else {
+      isAttending = false;
+      localAttendees = localAttendees.filter((a) => a.userId !== data.userId);
+    }
+
     const res = await fetch(`/api/events/${data.event.id}/attend`, { method: 'POST' });
     if (res.ok) {
       const body = await res.json();
       isAttending = body.attending;
+    } else {
+      // rollback
+      isAttending = prevAttending;
+      localAttendees = prevAttendees;
     }
     loading = false;
   }
@@ -72,7 +96,7 @@
     {/if}
   </div>
 
-  <h2 class="text-lg font-semibold text-white mb-3">参加者 ({data.attendees.length}人)</h2>
+  <h2 class="text-lg font-semibold text-white mb-3">参加者 ({localAttendees.length}人)</h2>
   <div class="space-y-2">
     {#each sortedAttendees as attendee}
       {@const isConnection = data.connectionUserIds.includes(attendee.userId)}

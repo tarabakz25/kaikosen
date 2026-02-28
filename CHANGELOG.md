@@ -2,6 +2,24 @@
 
 ## [Unreleased] - 2026-03-01
 
+### Added
+
+#### グラフ: ノードをGoogle Avatarアイコンに変更
+- `src/routes/+page.svelte`: D3ノードを `<circle>` から `<g>` ベースに変更。`avatarUrl` がある場合は SVG `<image>` + `clipPathUnits="objectBoundingBox"` で円形クリップ、ない場合は背景色+頭文字のフォールバック表示。ポップアップアイコンも `<img>` または頭文字に対応
+
+#### グラフ: イベント共通参加回数の炎エフェクト
+- `src/lib/types.ts`: `GraphEdge` に `sharedEventCount: number` フィールドを追加
+- `src/routes/api/graph/+server.ts`: 自分が参加したイベントと接続ユーザーの共通参加数を集計し `sharedEventCount` をエッジに付与
+- `src/routes/+page.svelte`: SVG `<defs>` に3段階の橙色グローフィルター (`flame-1/2/3`) を追加。sharedEventCount に応じてノードに適用。ポップアップに `🔥 一緒に参加: N回` を表示
+
+#### QRカード: スキャンされた側のpending自動遷移
+- `src/lib/server/db/schema.ts`: `connection` テーブルに `(userId, targetUserId)` の複合 unique インデックスを追加
+- `src/routes/api/connections/+server.ts`: GET に `?pending=true` クエリ対応追加 (alias='' かつ targetUserId=自分 の接続を返す)。POST を upsert に変更 (`onConflictDoUpdate`)
+- `src/routes/card/+page.svelte`: 表示タブ中に2秒間隔で pending ポーリングを実行。pending を検知したら `/connect?uid=` にリダイレクト
+
+#### イベント: 参加ボタン押下時の即時リスト反映
+- `src/routes/calendar/[slug]/+page.svelte`: `localAttendees` を `$state` で保持し楽観的更新を実装。参加/取り消し時にリストを即時更新、API失敗時は元に戻す。参加者数表示も `localAttendees.length` に変更
+
 ### Added / Fixed
 
 #### グラフ: ノードクリック時に二つ名を表示

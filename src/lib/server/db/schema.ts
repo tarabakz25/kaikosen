@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, primaryKey } from 'drizzle-orm/pg-core';
+import { pgTable, text, timestamp, primaryKey, uniqueIndex } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 
 export const profile = pgTable('profile', {
@@ -15,15 +15,19 @@ export const profile = pgTable('profile', {
 	updatedAt: timestamp('updated_at').notNull().defaultNow()
 });
 
-export const connection = pgTable('connection', {
-	id: text('id')
-		.primaryKey()
-		.$defaultFn(() => crypto.randomUUID()),
-	userId: text('user_id').notNull(),
-	targetUserId: text('target_user_id').notNull(),
-	alias: text('alias').notNull(),
-	connectedAt: timestamp('connected_at').notNull().defaultNow()
-});
+export const connection = pgTable(
+	'connection',
+	{
+		id: text('id')
+			.primaryKey()
+			.$defaultFn(() => crypto.randomUUID()),
+		userId: text('user_id').notNull(),
+		targetUserId: text('target_user_id').notNull(),
+		alias: text('alias').notNull(),
+		connectedAt: timestamp('connected_at').notNull().defaultNow()
+	},
+	(t) => [uniqueIndex('connection_user_target_unique').on(t.userId, t.targetUserId)]
+);
 
 export const event = pgTable('event', {
 	id: text('id')

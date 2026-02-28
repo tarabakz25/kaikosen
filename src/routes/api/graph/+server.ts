@@ -1,7 +1,7 @@
 import type { RequestHandler } from './$types';
 import { db } from '$lib/server/db';
-import { profile, connection } from '$lib/server/db/schema';
-import { eq, inArray } from 'drizzle-orm';
+import { profile, connection, eventAttendee } from '$lib/server/db/schema';
+import { eq, inArray, and, count } from 'drizzle-orm';
 
 export const GET: RequestHandler = async ({ locals }) => {
 	if (!locals.user) return Response.json({ nodes: [], edges: [] });
@@ -22,7 +22,35 @@ export const GET: RequestHandler = async ({ locals }) => {
 		avatarUrl: p.avatarUrl
 	}));
 
-	const edges = connections.map((c) => ({ source: c.userId, target: c.targetUserId, alias: c.alias }));
+	// 共通イベント数を計算
+	const myEvents = await db
+		.select({ eventId: eventAttendee.eventId })
+		.from(eventAttendee)
+		.where(eq(eventAttendee.userId, userId));
+	const myEventIds = myEvents.map((e) => e.eventId);
+
+	const sharedCounts =
+		myEventIds.length > 0 && connectedUserIds.length > 0
+			? await db
+					.select({ userId: eventAttendee.userId, count: count() })
+					.from(eventAttendee)
+					.where(
+						and(
+							inArray(eventAttendee.userId, connectedUserIds),
+							inArray(eventAttendee.eventId, myEventIds)
+						)
+					)
+					.groupBy(eventAttendee.userId)
+			: [];
+
+	const countMap = Object.fromEntries(sharedCounts.map((r) => [r.userId, Number(r.count)]));
+
+	const edges = connections.map((c) => ({
+		source: c.userId,
+		target: c.targetUserId,
+		alias: c.alias,
+		sharedEventCount: countMap[c.targetUserId] ?? 0
+	}));
 
 	return Response.json({ nodes, edges, currentUserId: userId });
 };
