@@ -2,7 +2,7 @@
   import { authClient } from '$lib/auth-client';
 
   async function signInWithGoogle() {
-    await authClient.signIn.social({ provider: 'google', callbackURL: '/' });
+    await authClient.signIn.social({ provider: 'google', callbackURL: `${window.location.origin}/` });
   }
 </script>
 
