@@ -1,5 +1,4 @@
 import type { LayoutServerLoad } from './$types';
-import { auth } from '$lib/server/auth';
 import { db } from '$lib/server/db';
 import { profile } from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
@@ -7,10 +6,10 @@ import { redirect } from '@sveltejs/kit';
 
 const PROTECTED_ROUTES = ['/', '/card', '/calendar', '/account'];
 
-export const load: LayoutServerLoad = async ({ request, url }) => {
-	const session = await auth.api.getSession({ headers: request.headers });
+export const load: LayoutServerLoad = async ({ locals, url }) => {
+	const { user } = locals;
 
-	if (!session) {
+	if (!user) {
 		if (PROTECTED_ROUTES.some((r) => url.pathname === r || url.pathname.startsWith(r + '/'))) {
 			redirect(302, '/login');
 		}
@@ -20,13 +19,12 @@ export const load: LayoutServerLoad = async ({ request, url }) => {
 	const [userProfile] = await db
 		.select()
 		.from(profile)
-		.where(eq(profile.userId, session.user.id))
+		.where(eq(profile.userId, user.id))
 		.limit(1);
 
-	// Profile not set, redirect to /account (except if already there)
 	if (!userProfile && url.pathname !== '/account' && url.pathname !== '/login') {
 		redirect(302, '/account');
 	}
 
-	return { user: session.user, userProfile: userProfile ?? null };
+	return { user, userProfile: userProfile ?? null };
 };

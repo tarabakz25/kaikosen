@@ -1,12 +1,10 @@
 import type { RequestHandler } from './$types';
 import { db } from '$lib/server/db';
 import { connection, profile } from '$lib/server/db/schema';
-import { auth } from '$lib/server/auth';
 import { eq } from 'drizzle-orm';
 
-export const GET: RequestHandler = async ({ request }) => {
-	const session = await auth.api.getSession({ headers: request.headers });
-	if (!session) {
+export const GET: RequestHandler = async ({ locals }) => {
+	if (!locals.user) {
 		return new Response('Unauthorized', { status: 401 });
 	}
 
@@ -26,14 +24,13 @@ export const GET: RequestHandler = async ({ request }) => {
 		})
 		.from(connection)
 		.leftJoin(profile, eq(profile.userId, connection.targetUserId))
-		.where(eq(connection.userId, session.user.id));
+		.where(eq(connection.userId, locals.user.id));
 
 	return Response.json(rows);
 };
 
-export const POST: RequestHandler = async ({ request }) => {
-	const session = await auth.api.getSession({ headers: request.headers });
-	if (!session) {
+export const POST: RequestHandler = async ({ request, locals }) => {
+	if (!locals.user) {
 		return new Response('Unauthorized', { status: 401 });
 	}
 
@@ -43,7 +40,7 @@ export const POST: RequestHandler = async ({ request }) => {
 	const [newConnection] = await db
 		.insert(connection)
 		.values({
-			userId: session.user.id,
+			userId: locals.user.id,
 			targetUserId,
 			alias
 		})

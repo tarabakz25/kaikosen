@@ -1,12 +1,10 @@
 import type { RequestHandler } from './$types';
 import { db } from '$lib/server/db';
 import { profile } from '$lib/server/db/schema';
-import { auth } from '$lib/server/auth';
 import { eq } from 'drizzle-orm';
 
-export const POST: RequestHandler = async ({ request }) => {
-	const session = await auth.api.getSession({ headers: request.headers });
-	if (!session) {
+export const POST: RequestHandler = async ({ request, locals }) => {
+	if (!locals.user) {
 		return new Response('Unauthorized', { status: 401 });
 	}
 
@@ -20,7 +18,7 @@ export const POST: RequestHandler = async ({ request }) => {
 	const [upserted] = await db
 		.insert(profile)
 		.values({
-			userId: session.user.id,
+			userId: locals.user.id,
 			nickname,
 			schoolName,
 			tags

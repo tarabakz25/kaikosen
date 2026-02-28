@@ -1,17 +1,20 @@
 import type { Handle } from '@sveltejs/kit';
-import { building } from '$app/environment';
-import { auth } from '$lib/server/auth';
-import { svelteKitHandler } from 'better-auth/svelte-kit';
+import { env } from '$env/dynamic/private';
 
-const handleBetterAuth: Handle = async ({ event, resolve }) => {
-	const session = await auth.api.getSession({ headers: event.request.headers });
-
-	if (session) {
-		event.locals.session = session.session;
-		event.locals.user = session.user;
+export const handle: Handle = async ({ event, resolve }) => {
+	try {
+		const response = await fetch(`${env.NEON_AUTH_URL}/get-session`, {
+			headers: event.request.headers
+		});
+		if (response.ok) {
+			const data = await response.json();
+			if (data?.user) {
+				event.locals.user = data.user;
+				event.locals.session = data.session;
+			}
+		}
+	} catch {
+		// session remains undefined
 	}
-
-	return svelteKitHandler({ event, resolve, auth, building });
+	return resolve(event);
 };
-
-export const handle: Handle = handleBetterAuth;

@@ -48,4 +48,3 @@ export const eventAttendee = pgTable(
 	(t) => [primaryKey({ columns: [t.eventId, t.userId] })]
 );
 
-export * from './auth.schema';
