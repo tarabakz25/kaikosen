@@ -89,8 +89,8 @@
 </div>
 
 {#if selectedNode}
-  <div class="fixed inset-0 bg-black/60 flex items-end justify-center z-50" onclick={() => selectedNode = null}>
-    <div class="bg-gray-900 rounded-t-2xl w-full max-w-lg p-6" onclick={(e) => e.stopPropagation()}>
+  <div class="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4" onclick={() => selectedNode = null}>
+    <div class="bg-gray-900 rounded-2xl w-full max-w-lg p-6" onclick={(e) => e.stopPropagation()}>
       <div class="flex items-center gap-4 mb-4">
         <div class="w-14 h-14 rounded-full flex items-center justify-center text-xl font-bold text-white" style="background-color: {schoolColor(selectedNode.schoolName)}">
           {selectedNode.nickname[0]}

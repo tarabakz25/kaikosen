@@ -1,10 +1,18 @@
 import type { RequestHandler } from './$types';
 import { db } from '$lib/server/db';
 import { profile, connection } from '$lib/server/db/schema';
+import { eq, inArray } from 'drizzle-orm';
 
-export const GET: RequestHandler = async () => {
-	const profiles = await db.select().from(profile);
-	const connections = await db.select().from(connection);
+export const GET: RequestHandler = async ({ locals }) => {
+	if (!locals.user) return Response.json({ nodes: [], edges: [] });
+
+	const userId = locals.user.id;
+
+	const connections = await db.select().from(connection).where(eq(connection.userId, userId));
+	const connectedUserIds = connections.map((c) => c.targetUserId);
+
+	const allUserIds = [userId, ...connectedUserIds];
+	const profiles = await db.select().from(profile).where(inArray(profile.userId, allUserIds));
 
 	const nodes = profiles.map((p) => ({
 		id: p.userId,
@@ -14,10 +22,7 @@ export const GET: RequestHandler = async () => {
 		avatarUrl: p.avatarUrl
 	}));
 
-	// Deduplicate: only include where userId < targetUserId
-	const edges = connections
-		.filter((c) => c.userId < c.targetUserId)
-		.map((c) => ({ source: c.userId, target: c.targetUserId }));
+	const edges = connections.map((c) => ({ source: c.userId, target: c.targetUserId }));
 
 	return Response.json({ nodes, edges });
 };

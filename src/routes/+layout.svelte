@@ -15,7 +15,7 @@
 
 <svelte:head><link rel="icon" href={favicon} /></svelte:head>
 
-<div class="min-h-screen bg-gray-950 text-gray-100 pb-16">
+<div class="h-screen overflow-y-auto bg-gray-950 text-gray-100 pb-16">
   {@render children()}
 </div>
 

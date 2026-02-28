@@ -22,8 +22,8 @@ export const load: LayoutServerLoad = async ({ locals, url }) => {
 		.where(eq(profile.userId, user.id))
 		.limit(1);
 
-	if (!userProfile && url.pathname !== '/account' && url.pathname !== '/login') {
-		redirect(302, '/account');
+	if (!userProfile && url.pathname !== '/account' && url.pathname !== '/account/edit' && url.pathname !== '/login') {
+		redirect(302, '/account/edit');
 	}
 
 	return { user, userProfile: userProfile ?? null };

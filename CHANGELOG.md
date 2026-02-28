@@ -2,6 +2,30 @@
 
 ## [Unreleased] - 2026-02-28
 
+### Changed (UI/UX)
+
+#### レイアウト・画面デザイン改善
+
+- **レイアウト**: `min-h-screen` → `h-screen overflow-y-auto` に変更し、ボディスクロールを禁止（モバイルアプリ的UX）
+  - `src/routes/+layout.svelte`
+
+- **つながり画面（グラフ）: ノードポップアップを中央表示に変更**
+  - `src/routes/+page.svelte`: `items-end` → `items-center`、`rounded-t-2xl` → `rounded-2xl`、背景オーバーレイに `p-4` 追加
+
+- **つながり画面（グラフ）: connectionした人のみノード表示**
+  - `src/routes/api/graph/+server.ts`: 全プロフィールを返すのを廃止し、ログインユーザーの connections に含まれるユーザーのみ返すように変更（`inArray` フィルタ追加）
+
+- **イベント画面: モックデータ追加**
+  - `src/routes/calendar/+page.server.ts`: DBにイベントが0件の場合、4件のモックイベント（ハッカソン・プロコン・LT会・ロボコン）を返す
+
+- **アカウント画面: 表示専用レイアウトにリデザイン**
+  - `src/routes/account/+page.svelte`: フォームを除去し、Googleアバター・ニックネーム・高専名・タグの表示専用ページに変更
+  - `src/routes/account/edit/+page.svelte` (新規): 既存のプロフィール編集フォームを移設。保存後は `/account` に遷移
+  - `src/routes/account/edit/+page.server.ts` (新規): 未ログイン時は `/login` にリダイレクト
+
+- **未プロファイルユーザーのリダイレクト先を修正**
+  - `src/routes/+layout.server.ts`: プロファイル未設定ユーザーのリダイレクト先を `/account` → `/account/edit` に変更。`/account/edit` をリダイレクト除外パスに追加
+
 ### Changed
 
 #### Database & Authentication: Neon + better-auth → Supabase
