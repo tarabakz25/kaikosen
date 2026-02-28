@@ -1,85 +1,22 @@
 import type { Handle } from '@sveltejs/kit';
-import { env } from '$env/dynamic/private';
-
-function splitSetCookieHeader(header: string): string[] {
-	// Split on cookie boundaries while preserving commas inside Expires attributes.
-	return header
-		.split(/,(?=\s*[^;,=\s]+=[^;,]+)/g)
-		.map((value) => value.trim())
-		.filter(Boolean);
-}
-
-function extractSetCookies(headers: Headers): string[] {
-	const value = headers as Headers & { getSetCookie?: () => string[] };
-	if (typeof value.getSetCookie === 'function') {
-		const cookies = value.getSetCookie();
-		if (cookies.length > 0) return cookies;
-	}
-
-	const fallback = headers.get('set-cookie');
-	if (!fallback) return [];
-	return splitSetCookieHeader(fallback);
-}
+import { auth } from '$lib/server/auth';
 
 export const handle: Handle = async ({ event, resolve }) => {
-	let authSetCookies: string[] = [];
+	const session = await auth.api.getSession({ headers: event.request.headers });
 
-	try {
-		const sessionUrl = new URL(`${env.NEON_AUTH_URL}/get-session`);
-
-		const verifier = event.url.searchParams.get('neon_auth_session_verifier');
-		if (verifier) {
-			sessionUrl.searchParams.set('neon_auth_session_verifier', verifier);
-		}
-
-		const cookie = event.request.headers.get('cookie') ?? '';
-		const origin =
-			event.request.headers.get('origin') ??
-			event.request.headers.get('referer')?.split('/').slice(0, 3).join('/') ??
-			event.url.origin;
-
-		const response = await fetch(sessionUrl.toString(), {
-			headers: {
-				cookie,
-				origin,
-				'x-neon-auth-middleware': 'true'
-			}
-		});
-
-		if (response.ok) {
-			const data = await response.json();
-			if (data?.user) {
-				event.locals.user = data.user;
-				event.locals.session = data.session;
-			}
-			authSetCookies = extractSetCookies(response.headers);
-
-			if (verifier && authSetCookies.length === 0) {
-				console.warn('[hooks] verifier exists but no set-cookie returned from Neon Auth');
-			}
-		} else {
-			const text = await response.text();
-			if (text.includes('INVALID_HOSTNAME')) {
-				console.warn('[hooks] invalid hostname context:', {
-					sessionUrl: sessionUrl.toString(),
-					origin,
-					requestHost: event.request.headers.get('host'),
-					requestForwardedHost: event.request.headers.get('x-forwarded-host'),
-					requestForwardedProto: event.request.headers.get('x-forwarded-proto'),
-					urlOrigin: event.url.origin
-				});
-			}
-			console.log('[hooks] get-session error body:', text.slice(0, 200));
-		}
-	} catch (e) {
-		console.error('[hooks] fetch error:', e);
+	if (session) {
+		event.locals.user = {
+			id: session.user.id,
+			name: session.user.name,
+			email: session.user.email,
+			image: session.user.image
+		};
+		event.locals.session = {
+			id: session.session.id,
+			userId: session.session.userId,
+			expiresAt: session.session.expiresAt.toISOString()
+		};
 	}
 
-	const response = await resolve(event);
-
-	for (const cookie of authSetCookies) {
-		response.headers.append('set-cookie', cookie);
-	}
-
-	return response;
+	return resolve(event);
 };

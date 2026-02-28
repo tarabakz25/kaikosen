@@ -2,6 +2,20 @@
 
 ## [Unreleased] - 2026-02-28
 
+### Changed
+
+#### Authentication
+
+- **認証基盤を neon-auth → better-auth に移行**
+  - `better-auth@1.4.20` を dependencies に追加
+  - `src/lib/server/auth.ts` を新規作成。`betterAuth()` + `drizzleAdapter` + Google OAuth provider で構成。DB は既存の `auth.schema.ts`（user/session/account/verification）をそのまま利用
+  - `src/routes/api/auth/[...all]/+server.ts` を新規作成。GET/POST を `auth.handler(request)` に委譲
+  - `src/lib/auth-client.ts` を `createAuthClient` (`better-auth/client`) に変更
+  - `src/hooks.server.ts` を全面書き換え。`auth.api.getSession()` でセッション取得し `event.locals` に設定。Neon Auth 独自の fetch プロキシロジックを削除
+  - `.env` / `.env.example` に `BETTER_AUTH_SECRET`、`GOOGLE_CLIENT_ID`、`GOOGLE_CLIENT_SECRET` を追加。`NEON_AUTH_URL` / `VITE_NEON_AUTH_URL` を削除
+
+---
+
 ### Fixed
 
 #### Build
