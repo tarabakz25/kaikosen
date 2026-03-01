@@ -3,7 +3,9 @@
 /* Base - theme colors applied via data-theme */
 html {
 	background-color: var(--color-kaiko-bg);
+	font-family: var(--font-sans);
 }
+
 
 /* Light theme (default) - base: #8FC1B5 */
 @theme {
@@ -17,6 +19,8 @@ html {
   --color-kaiko-accent-hover: #7AB8A9;
   --color-kaiko-accent-muted: #B8E0D8;
   --color-kaiko-accent-dark: #5A9A8E;
+  
+  --font-sans: 'avenir-next-lt-pro', 'meiryo-ui', sans-serif;
 }
 
 /* Dark theme */
