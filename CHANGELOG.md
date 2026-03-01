@@ -4,6 +4,21 @@
 
 ### Added
 
+#### ページ遷移: ランドルト環スピナー
+- `src/routes/+layout.svelte`: `navigating` ($app/state) を利用し、ページ遷移中に全画面オーバーレイでランドルト環（C字形・accent色）スピナーを表示
+
+#### QRスキャンされた側のグローバル自動リダイレクト
+- `src/routes/+layout.svelte`: pending接続ポーリング (2秒間隔) をレイアウトに移動。ログイン中であればどのページにいてもQRスキャンを検知し `/connect?uid=` へリダイレクト
+- `src/routes/card/+page.svelte`: ローカルのpolling実装 (`pollIntervalId`, `startPoll`, `stopPoll`) を削除。レイアウトのグローバルポーリングに一本化
+
+---
+
+### Added
+
+#### UI: ロゴ配置
+- `src/routes/login/+page.svelte`: ランディングページ中央に `logo.webp` を表示。`h1` テキストを削除しロゴ画像に置換
+- `src/routes/+layout.svelte`: 認証済みユーザー向けに sticky ヘッダーを追加し左上にロゴを表示
+
 #### グラフ: ノードをGoogle Avatarアイコンに変更
 - `src/routes/+page.svelte`: D3ノードを `<circle>` から `<g>` ベースに変更。`avatarUrl` がある場合は SVG `<image>` + `clipPathUnits="objectBoundingBox"` で円形クリップ、ない場合は背景色+頭文字のフォールバック表示。ポップアップアイコンも `<img>` または頭文字に対応
 
