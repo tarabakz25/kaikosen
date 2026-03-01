@@ -87,7 +87,7 @@
 
 <svelte:head><link rel="icon" href={favicon} /></svelte:head>
 
-{#if navigating}
+{#if navigating.to}
   <div class="fixed inset-0 z-[100] flex items-center justify-center bg-kaiko-bg/60 backdrop-blur-sm pointer-events-none">
     <div class="landolt-ring"></div>
   </div>
