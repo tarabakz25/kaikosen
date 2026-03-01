@@ -10,5 +10,12 @@ export type Event = {
   startAt: Date; endAt: Date | null; location: string | null; createdBy: string; createdAt: Date;
 };
 export type EventAttendee = { eventId: string; userId: string; joinedAt: Date; };
-export type GraphNode = { id: string; nickname: string; schoolName: string; tags: string[]; avatarUrl: string | null; };
+export type GraphNode = {
+	id: string;
+	nickname: string;
+	schoolName: string;
+	tags: string[];
+	avatarUrl: string | null;
+	message?: string | null;
+};
 export type GraphEdge = { source: string; target: string; alias: string; sharedEventCount: number; };

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import { parseUtc } from '$lib/date';
 
 	type FellowAttendee = { userId: string; nickname: string | null; avatarUrl: string | null };
 
@@ -14,7 +15,7 @@
 
 	function formatDate(d: Date | string | null) {
 		if (!d) return '';
-		return new Date(d).toLocaleDateString('ja-JP', {
+		return parseUtc(d).toLocaleDateString('ja-JP', {
 			year: 'numeric',
 			month: 'long',
 			day: 'numeric',
@@ -26,9 +27,17 @@
 
 	const sortedAttendees = $derived(
 		[...data.attendees].sort((a, b) => {
-			const commonA = (a.pastContests ?? []).filter((c) => myPastContests.includes(c)).length;
-			const commonB = (b.pastContests ?? []).filter((c) => myPastContests.includes(c)).length;
-			return commonB - commonA;
+			const rank = (x: (typeof data.attendees)[0]) => {
+				if (data.userId && x.userId === data.userId) return 0;
+				if (data.connectionUserIds?.includes(x.userId)) return 1;
+				return 2;
+			};
+			const common = (x: (typeof data.attendees)[0]) =>
+				(x.pastContests ?? []).filter((c) => myPastContests.includes(c)).length;
+			const rA = rank(a);
+			const rB = rank(b);
+			if (rA !== rB) return rA - rB;
+			return common(b) - common(a);
 		})
 	);
 
@@ -109,33 +118,47 @@
 	<h2 class="mb-3 text-lg font-semibold text-kaiko-text">参加者 ({data.attendees.length}人)</h2>
 	<div class="space-y-2">
 		{#each sortedAttendees as attendee}
-			{@const isConnection = data.connectionUserIds.includes(attendee.userId)}
+			{@const isSelf = data.userId && attendee.userId === data.userId}
+			{@const isConnection = !isSelf && data.connectionUserIds.includes(attendee.userId)}
 			{@const common = commonCount(attendee.pastContests)}
-			<div
-				class="flex items-center gap-3 rounded-lg border border-kaiko-border bg-kaiko-surface px-4 py-3"
+			{@const profileHref = isSelf ? '/account' : `/profile/${attendee.userId}`}
+			<a
+				href={profileHref}
+				class="flex items-center gap-3 rounded-lg border border-kaiko-border bg-kaiko-surface px-4 py-3 transition-colors hover:bg-kaiko-surface-alt"
 			>
-				<div
-					class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-kaiko-accent text-sm font-bold text-white"
-				>
-					{attendee.nickname?.[0] ?? '?'}
-				</div>
+				{#if attendee.avatarUrl}
+					<img src={attendee.avatarUrl} alt="" class="h-8 w-8 shrink-0 rounded-full object-cover" />
+				{:else}
+					<div
+						class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-kaiko-accent text-sm font-bold text-white"
+					>
+						{attendee.nickname?.[0] ?? '?'}
+					</div>
+				{/if}
 				<div class="min-w-0 flex-1">
 					<p class="truncate font-medium text-kaiko-text">{attendee.nickname ?? '不明'}</p>
 					<p class="truncate text-xs text-kaiko-muted">{attendee.schoolName ?? ''}</p>
 				</div>
 				<div class="flex shrink-0 gap-1">
-					{#if common > 0}
-						<span class="rounded-full bg-amber-100 px-2 py-0.5 text-xs text-amber-800"
-							>共通{common}個</span
+					{#if isSelf}
+						<span
+							class="rounded-full bg-kaiko-accent-muted px-2 py-0.5 text-xs text-kaiko-accent-dark"
+							>自分</span
 						>
-					{/if}
-					{#if isConnection}
-						<span class="rounded-full bg-emerald-100 px-2 py-0.5 text-xs text-emerald-800"
-							>繋がり</span
-						>
+					{:else}
+						{#if common > 0}
+							<span class="rounded-full bg-amber-100 px-2 py-0.5 text-xs text-amber-800"
+								>共通{common}</span
+							>
+						{/if}
+						{#if isConnection}
+							<span class="rounded-full bg-emerald-100 px-2 py-0.5 text-xs text-emerald-800"
+								>繋がり</span
+							>
+						{/if}
 					{/if}
 				</div>
-			</div>
+			</a>
 		{/each}
 	</div>
 </div>

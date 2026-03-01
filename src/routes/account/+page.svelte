@@ -3,10 +3,49 @@
 	import { supabase } from '$lib/auth-client';
 	import { goto } from '$app/navigation';
 	import { getTheme, setTheme } from '$lib/theme';
+	import { PAST_CONTESTS_TITLE } from '$lib/contests';
+	import { parseUtc } from '$lib/date';
 
 	let { data } = $props();
 
 	let isDark = $state(false);
+
+	function formatEventDate(d: string | Date): string {
+		return parseUtc(d).toLocaleDateString('ja-JP', {
+			month: 'short',
+			day: 'numeric',
+			weekday: 'short',
+			year: 'numeric'
+		});
+	}
+
+	const participationList = $derived.by(() => {
+		const items: Array<{ type: 'contest' | 'event'; label: string; year?: string; date?: string | Date; eventId?: string }> = [];
+		for (const entry of data.userProfile?.pastContests ?? []) {
+			const i = entry.lastIndexOf('-');
+			const year = i >= 0 ? entry.slice(i + 1) : '';
+			const contest = PAST_CONTESTS_TITLE.find((c) => c.id === entry.slice(0, i));
+			items.push({
+				type: 'contest',
+				label: contest?.title ?? entry,
+				year
+			});
+		}
+		for (const ev of data.attendedEvents ?? []) {
+			items.push({
+				type: 'event',
+				label: ev.title,
+				date: ev.startAt,
+				eventId: ev.id
+			});
+		}
+		items.sort((a, b) => {
+			const dateA = a.date ? parseUtc(a.date).getTime() : (a.year ? new Date(`${a.year}-01-01`).getTime() : 0);
+			const dateB = b.date ? parseUtc(b.date).getTime() : (b.year ? new Date(`${b.year}-01-01`).getTime() : 0);
+			return dateB - dateA;
+		});
+		return items;
+	});
 
 	onMount(() => {
 		isDark = getTheme() === 'dark';
@@ -77,6 +116,39 @@
 			<p class="w-full text-left text-[15px] leading-relaxed whitespace-pre-wrap text-kaiko-text">
 				{(data.userProfile?.message ?? data.user?.message ?? '').trim()}
 			</p>
+		{/if}
+
+		<!-- 参加したイベント・コンテスト一覧 -->
+		{#if participationList.length > 0}
+			<div class="w-full">
+				<h2 class="mb-2 text-sm font-medium text-kaiko-muted">参加したイベント・コンテスト</h2>
+				<ul class="space-y-1.5">
+					{#each participationList as item}
+						<li>
+							{#if item.type === 'event' && item.eventId}
+								<a
+									href="/calendar/{item.eventId}"
+									class="block rounded-lg border border-kaiko-border bg-kaiko-surface px-3 py-2 text-sm text-kaiko-text transition-colors hover:bg-kaiko-surface-alt"
+								>
+									<span class="font-medium">{item.label}</span>
+									{#if item.date}
+										<span class="ml-2 text-xs text-kaiko-muted">{formatEventDate(item.date)}</span>
+									{/if}
+								</a>
+							{:else}
+								<div
+									class="rounded-lg border border-kaiko-border bg-kaiko-surface px-3 py-2 text-sm text-kaiko-text"
+								>
+									<span class="font-medium">{item.label}</span>
+									{#if item.year}
+										<span class="ml-2 text-xs text-kaiko-muted">{item.year}年</span>
+									{/if}
+								</div>
+							{/if}
+						</li>
+					{/each}
+				</ul>
+			</div>
 		{/if}
 
 		<!-- アクション -->
