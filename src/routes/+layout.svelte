@@ -69,8 +69,14 @@
   <div class="flex justify-around items-center h-16 max-w-lg mx-auto px-4">
     {#each navItems as item}
       {@const isActive = page.url.pathname === item.href || (item.href !== '/' && page.url.pathname.startsWith(item.href))}
+      {@const isAccount = item.href === '/account'}
+      {@const avatarUrl = data.userProfile?.avatarUrl ?? data.user?.image}
       <a href={item.href} class="flex flex-col items-center gap-0.5 px-3 py-2 rounded-lg transition-colors {isActive ? 'text-kaiko-accent' : 'text-kaiko-muted hover:text-kaiko-text'}">
-        <span class="text-xl">{item.icon}</span>
+        {#if isAccount && avatarUrl}
+          <img src={avatarUrl} alt="" class="h-6 w-6 rounded-full object-cover" />
+        {:else}
+          <span class="text-xl">{item.icon}</span>
+        {/if}
         <span class="text-xs">{item.label}</span>
       </a>
     {/each}

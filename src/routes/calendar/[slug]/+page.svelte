@@ -153,17 +153,15 @@
 			<h2 id="thank-you-title" class="mb-4 text-xl font-bold text-kaiko-text">
 				イベントへの参加が完了しました
 			</h2>
-			<p class="mb-4 text-sm text-kaiko-muted">
-				ご参加いただきありがとうございます！
-			</p>
-			<p class="mb-3 text-sm text-kaiko-muted">この人...見たことあるかも</p>
-			<div class="mb-6 max-h-40 overflow-y-auto rounded-xl border border-kaiko-border bg-kaiko-bg">
-				{#if fellowLoading}
-					<p class="py-6 text-center text-sm text-kaiko-muted">読み込み中...</p>
-				{:else if fellowAttendees.length === 0}
-					<p class="py-6 text-center text-sm text-kaiko-muted">他のイベントで会った人はいません</p>
-				{:else}
-					<div class="divide-y divide-kaiko-border">
+			<p class="mb-4 text-sm text-kaiko-muted">ご参加いただきありがとうございます！</p>
+			{#if fellowLoading}
+				<p class="py-6 text-center text-sm text-kaiko-muted">読み込み中...</p>
+			{:else}
+				<div>
+					<p class="mb-3 text-sm text-kaiko-muted">この人...見たことあるかも</p>
+					<div
+						class="mb-6 max-h-40 overflow-y-auto rounded-xl border border-kaiko-border bg-kaiko-bg"
+					>
 						{#each fellowAttendees as person}
 							<div class="flex items-center gap-3 px-4 py-3">
 								{#if person.avatarUrl}
@@ -183,14 +181,14 @@
 							</div>
 						{/each}
 					</div>
-				{/if}
-			</div>
-			<a
-				href="/calendar"
-				class="block w-full rounded-xl bg-kaiko-accent py-3 font-semibold text-white transition-colors hover:bg-kaiko-accent-hover"
-			>
-				イベント一覧に戻る
-			</a>
+					<a
+						href="/calendar"
+						class="block w-full rounded-xl bg-kaiko-accent py-3 font-semibold text-white transition-colors hover:bg-kaiko-accent-hover"
+					>
+						イベント一覧に戻る
+					</a>
+				</div>
+			{/if}
 		</div>
 	</div>
 {/if}
