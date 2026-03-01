@@ -1,15 +1,38 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import * as d3 from 'd3';
+	import { parseUtc } from '$lib/date';
 	import type { GraphNode, GraphEdge } from '$lib/types';
 
 	let { data } = $props();
+
+	function formatConnectionDate(d: string): string {
+		return parseUtc(d).toLocaleDateString('ja-JP', {
+			month: 'short',
+			day: 'numeric',
+			weekday: 'short',
+			hour: '2-digit',
+			minute: '2-digit'
+		});
+	}
+
+	function formatEventDate(d: string): string {
+		return parseUtc(d).toLocaleDateString('ja-JP', {
+			month: 'short',
+			day: 'numeric',
+			weekday: 'short'
+		});
+	}
 
 	let svgEl: SVGSVGElement;
 	let selectedNode = $state<GraphNode | null>(null);
 	let selectedAlias = $state<string | null>(null);
 	let selectedSharedCount = $state(0);
 	let currentUserId = $state<string | null>(null);
+	let connectionDetails = $state<{
+		connectedAt: string | null;
+		sharedEvents: Array<{ id: string; title: string; startAt: string; endAt: string | null; location: string | null }>;
+	} | null>(null);
 
 	function schoolColor(schoolName: string): string {
 		let hash = 0;
@@ -31,6 +54,23 @@
 		if (count >= 1) return 'url(#flame-1)';
 		return null;
 	}
+
+	$effect(() => {
+		const node = selectedNode;
+		if (!node) {
+			connectionDetails = null;
+			return;
+		}
+		const targetId = node.id;
+		fetch(`/api/connections/${targetId}/details`)
+			.then((r) => r.json())
+			.then((d) => {
+				if (selectedNode?.id === targetId) connectionDetails = d;
+			})
+			.catch(() => {
+				if (selectedNode?.id === targetId) connectionDetails = null;
+			});
+	});
 
 	onMount(async () => {
 		const res = await fetch('/api/graph');
@@ -290,13 +330,61 @@
 					<p class="text-kaiko-muted">{selectedNode.schoolName}</p>
 				</div>
 			</div>
-			<div class="flex flex-wrap gap-1.5">
+
+			<div class="mb-4 flex flex-wrap gap-1.5">
 				{#each selectedNode.tags as tag}
 					<span class="rounded-full bg-kaiko-accent-muted px-3 py-1 text-sm text-kaiko-accent-dark"
 						>#{tag}</span
 					>
 				{/each}
 			</div>
+
+			{#if selectedNode.message}
+				<p class="mb-4 text-sm text-kaiko-muted">{selectedNode.message}</p>
+			{/if}
+
+			{#if connectionDetails}
+				{@const timelineItems = (() => {
+					const list: Array<{ type: 'connection' | 'event'; date: string; label?: string; event?: { id: string; title: string; startAt: string; location: string | null } }> = [];
+					if (connectionDetails.connectedAt) {
+						list.push({ type: 'connection', date: connectionDetails.connectedAt, label: '繋がった日' });
+					}
+					for (const ev of connectionDetails.sharedEvents) {
+						list.push({ type: 'event', date: ev.startAt, event: ev });
+					}
+					return list.sort((a, b) => parseUtc(a.date).getTime() - parseUtc(b.date).getTime());
+				})()}
+				{#if timelineItems.length > 0}
+					<div class="mb-4 space-y-3">
+						<h3 class="text-sm font-semibold text-kaiko-text">つながりの履歴</h3>
+						<ul class="space-y-2">
+							{#each timelineItems as item}
+							<li class="flex items-start gap-3 text-sm">
+								<span class="shrink-0 text-kaiko-muted">{item.type === 'connection' ? formatConnectionDate(item.date) : formatEventDate(item.date)}</span>
+								{#if item.type === 'connection'}
+									<span class="text-kaiko-text">🔗 {item.label}</span>
+								{:else if item.event}
+									<span class="flex flex-col gap-0.5">
+										<a
+											href="/calendar/{item.event.id}"
+											class="text-kaiko-accent hover:underline"
+										>
+											{item.event.title}
+										</a>
+										{#if item.event.location}
+											<span class="text-kaiko-muted text-xs">📍 {item.event.location}</span>
+										{/if}
+									</span>
+								{/if}
+							</li>
+						{/each}
+					</ul>
+				</div>
+				{/if}
+			{:else if selectedNode}
+				<div class="mb-4 text-sm text-kaiko-muted">読み込み中…</div>
+			{/if}
+
 			<button
 				onclick={() => (selectedNode = null)}
 				class="mt-4 w-full rounded-xl border border-kaiko-border py-3 text-kaiko-muted transition-colors hover:bg-kaiko-surface-alt hover:text-kaiko-text"
