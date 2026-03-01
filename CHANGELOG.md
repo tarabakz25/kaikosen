@@ -2,6 +2,13 @@
 
 ## [Unreleased] - 2026-03-01
 
+### Fixed
+
+#### QRスキャン: 二つ名登録画面が表示されない問題
+- `src/routes/connect/+page.server.ts`: プロフィールへのリダイレクトを廃止。`/connect?uid=` で相手プロフィールを取得し二つ名登録用データを返す
+- `src/routes/connect/+page.svelte`: 二つ名入力フォームを表示。登録後は相手プロフィールへ遷移
+- `src/routes/+layout.server.ts`: `/connect` を保護ルートに追加（未ログイン時はログインへ）
+
 ### Added
 
 #### ページ遷移: ランドルト環スピナー

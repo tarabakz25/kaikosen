@@ -4,7 +4,7 @@ import { profile } from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
 import { redirect } from '@sveltejs/kit';
 
-const PROTECTED_ROUTES = ['/', '/card', '/calendar', '/account', '/profile'];
+const PROTECTED_ROUTES = ['/', '/card', '/calendar', '/account', '/profile', '/connect'];
 
 export const load: LayoutServerLoad = async ({ locals, url }) => {
 	const { user } = locals;
