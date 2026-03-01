@@ -1,5 +1,6 @@
 <script lang="ts">
   import { supabase } from '$lib/auth-client';
+  import logo from '$lib/assets/logo.webp';
 
   async function signInWithGoogle() {
     await supabase.auth.signInWithOAuth({
@@ -11,7 +12,7 @@
 
 <div class="min-h-screen flex flex-col items-center justify-center bg-kaiko-bg px-4">
   <div class="text-center mb-12">
-    <h1 class="text-4xl font-bold text-kaiko-text mb-2">kaikosen</h1>
+    <img src={logo} alt="kaikosen" class="w-32 h-32 mx-auto mb-4 object-contain" />
     <p class="text-kaiko-muted text-lg">高専生のためのネットワーキングアプリ</p>
   </div>
 

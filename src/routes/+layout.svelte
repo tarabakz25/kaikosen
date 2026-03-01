@@ -1,6 +1,7 @@
 <script lang="ts">
   import './layout.css';
   import favicon from '$lib/assets/favicon.svg';
+  import logo from '$lib/assets/logo.webp';
   import { page } from '$app/state';
   import { onMount } from 'svelte';
 
@@ -61,6 +62,11 @@
 <svelte:head><link rel="icon" href={favicon} /></svelte:head>
 
 <div class="h-screen overflow-y-auto bg-kaiko-bg text-kaiko-text pb-16">
+  {#if data.user}
+  <header class="sticky top-0 z-40 bg-kaiko-bg px-4 py-2">
+    <img src={logo} alt="kaikosen" class="h-8 object-contain" />
+  </header>
+  {/if}
   {@render children()}
 </div>
 

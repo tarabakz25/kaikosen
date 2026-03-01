@@ -4,6 +4,10 @@
 
 ### Added
 
+#### UI: ロゴ配置
+- `src/routes/login/+page.svelte`: ランディングページ中央に `logo.webp` を表示。`h1` テキストを削除しロゴ画像に置換
+- `src/routes/+layout.svelte`: 認証済みユーザー向けに sticky ヘッダーを追加し左上にロゴを表示
+
 #### グラフ: ノードをGoogle Avatarアイコンに変更
 - `src/routes/+page.svelte`: D3ノードを `<circle>` から `<g>` ベースに変更。`avatarUrl` がある場合は SVG `<image>` + `clipPathUnits="objectBoundingBox"` で円形クリップ、ない場合は背景色+頭文字のフォールバック表示。ポップアップアイコンも `<img>` または頭文字に対応
 
