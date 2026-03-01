@@ -16,7 +16,7 @@
 		});
 		submitting = false;
 		if (res.ok) {
-			goto(`/profile/${data.targetUserId}`);
+			goto('/');
 		}
 	}
 </script>

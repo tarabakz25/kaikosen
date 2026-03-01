@@ -4,6 +4,11 @@
 
 ### Fixed
 
+#### QRスキャンフロー: pending.userId → targetUserId バグ修正・リダイレクト先を `/` に統一
+- `src/routes/+layout.svelte`: グローバルpoll の `goto` で `body.pending.userId`（自分のID）を使っていたバグを `body.pending.targetUserId` に修正。また `/card` ページではローカルpollがあるためグローバルpollをスキップするよう条件追加
+- `src/routes/card/+page.svelte`: 二つ名登録成功後（scanned/pending 両方）に scan 再起動していたのを `goto('/')` に変更
+- `src/routes/connect/+page.svelte`: 登録成功後のリダイレクトを `/profile/...` から `/` に変更
+
 #### QRスキャン: 二つ名登録画面が表示されない問題
 - `src/routes/connect/+page.server.ts`: プロフィールへのリダイレクトを廃止。`/connect?uid=` で相手プロフィールを取得し二つ名登録用データを返す
 - `src/routes/connect/+page.svelte`: 二つ名入力フォームを表示。登録後は相手プロフィールへ遷移

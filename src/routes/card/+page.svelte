@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onDestroy } from 'svelte';
+	import { goto } from '$app/navigation';
 	import QRCode from 'qrcode';
 	import jsQR from 'jsqr';
 
@@ -122,9 +123,7 @@
 		});
 		pendingSubmitting = false;
 		if (res.ok) {
-			pendingAlias = null;
-			pendingAliasInput = '';
-			startPoll();
+			goto('/');
 		}
 	}
 
@@ -266,11 +265,7 @@
 						});
 						scannedSubmitting = false;
 						if (res.ok) {
-							scannedUserId = null;
-							scannedProfile = null;
-							scannedAliasInput = '';
-							tab = 'scan';
-							startScan();
+							goto('/');
 						}
 					}}
 					disabled={!scannedAliasInput.trim() || scannedSubmitting}

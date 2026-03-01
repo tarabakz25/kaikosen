@@ -23,13 +23,13 @@
   function startGlobalPoll() {
     if (pollIntervalId || !data.user) return;
     pollIntervalId = setInterval(async () => {
-      if (page.url.pathname.startsWith('/connect')) return;
+      if (page.url.pathname.startsWith('/connect') || page.url.pathname.startsWith('/card')) return;
       const res = await fetch('/api/connections?pending=true');
       if (!res.ok) return;
       const body = await res.json();
       if (body.pending) {
         stopGlobalPoll();
-        goto(`/connect?uid=${body.pending.userId}`);
+        goto(`/connect?uid=${body.pending.targetUserId}`);
       }
     }, 2000);
   }
