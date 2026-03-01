@@ -65,24 +65,7 @@
     if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
   }
 
-  function startPoll() {
-    if (pollIntervalId) return;
-    pollIntervalId = setInterval(async () => {
-      const res = await fetch('/api/connections?pending=true');
-      if (!res.ok) return;
-      const body = await res.json();
-      if (body.pending) {
-        stopPoll();
-        goto(`/connect?uid=${body.pending.userId}`);
-      }
-    }, 2000);
-  }
-
-  function stopPoll() {
-    if (pollIntervalId) { clearInterval(pollIntervalId); pollIntervalId = null; }
-  }
-
-  onDestroy(() => { stopScan(); stopPoll(); });
+  onDestroy(stopScan);
 
   $effect(() => {
     if (tab === 'scan') startScan();
