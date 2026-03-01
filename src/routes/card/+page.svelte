@@ -2,7 +2,6 @@
   import { onDestroy } from 'svelte';
   import QRCode from 'qrcode';
   import jsQR from 'jsqr';
-  import { goto } from '$app/navigation';
 
   let { data } = $props();
 
@@ -15,6 +14,12 @@
   let pollIntervalId: ReturnType<typeof setInterval> | null = null;
   let scannedUserId = $state<string | null>(null);
   let scanError = $state('');
+  let pendingAlias = $state<{
+    targetUserId: string;
+    targetProfile: { nickname: string; schoolName: string; avatarUrl: string | null } | null;
+  } | null>(null);
+  let pendingAliasInput = $state('');
+  let pendingSubmitting = $state(false);
 
   const userId = data.user?.id;
 
@@ -54,6 +59,12 @@
         if (uid && uid !== userId) {
           stopScan();
           scannedUserId = uid;
+          // スキャンしたことをサーバーに通知（相手の画面に二つ名登録モーダルを出すため）
+          fetch('/api/connections/scanned', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ scannedUserId: uid })
+          }).catch(() => {});
           return;
         }
       }
@@ -72,11 +83,30 @@
       const res = await fetch('/api/connections?pending=true');
       if (!res.ok) return;
       const body = await res.json();
-      if (body.pending) {
+      if (body.pending && !pendingAlias) {
         stopPoll();
-        goto(`/connect?uid=${body.pending.userId}`);
+        pendingAlias = {
+          targetUserId: body.pending.targetUserId,
+          targetProfile: body.pending.targetProfile
+        };
       }
     }, 2000);
+  }
+
+  async function submitPendingAlias() {
+    if (!pendingAlias || !pendingAliasInput.trim()) return;
+    pendingSubmitting = true;
+    const res = await fetch(`/api/connections/${pendingAlias.targetUserId}/alias`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ alias: pendingAliasInput.trim() })
+    });
+    pendingSubmitting = false;
+    if (res.ok) {
+      pendingAlias = null;
+      pendingAliasInput = '';
+      startPoll();
+    }
   }
 
   function stopPoll() {
@@ -86,8 +116,13 @@
   onDestroy(() => { stopScan(); stopPoll(); });
 
   $effect(() => {
-    if (tab === 'scan') { startScan(); stopPoll(); }
-    else { stopScan(); startPoll(); }
+    if (tab === 'scan') {
+      startScan();
+      stopPoll();
+    } else {
+      stopScan();
+      if (!pendingAlias) startPoll();
+    }
   });
 </script>
 
@@ -149,6 +184,57 @@
         <a href="/profile/{scannedUserId}" class="flex-1 py-3 rounded-xl bg-kaiko-accent hover:bg-kaiko-accent-hover text-white font-semibold text-center">
           プロフィールを見る
         </a>
+      </div>
+    </div>
+  </div>
+{/if}
+
+{#if pendingAlias}
+  <div class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 px-4" role="dialog" aria-modal="true" aria-labelledby="pending-alias-title">
+    <div class="bg-kaiko-surface rounded-2xl p-6 w-full max-w-sm shadow-xl border border-kaiko-border">
+      <h2 id="pending-alias-title" class="text-xl font-bold text-kaiko-text mb-2">QRコードをスキャンされました</h2>
+      <p class="text-kaiko-muted text-sm mb-4">この人に二つ名（あだ名）をつけてください</p>
+      {#if pendingAlias.targetProfile}
+        <div class="flex items-center gap-3 mb-4 p-3 rounded-lg bg-kaiko-surface-alt">
+          {#if pendingAlias.targetProfile.avatarUrl}
+            <img src={pendingAlias.targetProfile.avatarUrl} alt="" class="h-12 w-12 rounded-full object-cover" />
+          {:else}
+            <div class="h-12 w-12 rounded-full bg-kaiko-accent flex items-center justify-center text-white font-bold text-lg">
+              {pendingAlias.targetProfile.nickname?.[0] ?? '?'}
+            </div>
+          {/if}
+          <div>
+            <p class="font-medium text-kaiko-text">{pendingAlias.targetProfile.nickname}</p>
+            <p class="text-sm text-kaiko-muted">{pendingAlias.targetProfile.schoolName}</p>
+          </div>
+        </div>
+      {/if}
+      <input
+        bind:value={pendingAliasInput}
+        type="text"
+        placeholder="例: ロボット部の佐藤くん"
+        class="w-full bg-kaiko-bg border border-kaiko-border rounded-lg px-4 py-3 text-kaiko-text placeholder-kaiko-muted focus:outline-none focus:border-kaiko-accent mb-4"
+      />
+      <div class="flex gap-3">
+        <button
+          onclick={async () => {
+            if (!pendingAlias) return;
+            await fetch(`/api/connections/${pendingAlias.targetUserId}`, { method: 'DELETE' });
+            pendingAlias = null;
+            pendingAliasInput = '';
+            startPoll();
+          }}
+          class="flex-1 py-3 rounded-xl border border-kaiko-border text-kaiko-muted hover:text-kaiko-text"
+        >
+          後で
+        </button>
+        <button
+          onclick={submitPendingAlias}
+          disabled={!pendingAliasInput.trim() || pendingSubmitting}
+          class="flex-1 py-3 rounded-xl bg-kaiko-accent hover:bg-kaiko-accent-hover disabled:bg-kaiko-border disabled:text-kaiko-muted text-white font-semibold"
+        >
+          {pendingSubmitting ? '登録中...' : '登録する'}
+        </button>
       </div>
     </div>
   </div>
