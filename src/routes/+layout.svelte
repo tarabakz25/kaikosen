@@ -6,15 +6,16 @@
   import { page, navigating } from '$app/state';
   import { onMount, onDestroy } from 'svelte';
   import { goto } from '$app/navigation';
+  import { Network, Camera, CalendarDays, UserRound } from 'lucide-svelte';
 
 	let { children, data } = $props();
 
 
   const navItems = [
-    { href: '/', icon: '🕸️', label: 'つながり' },
-    { href: '/card', icon: '📷', label: 'カード' },
-    { href: '/calendar', icon: '📅', label: 'イベント' },
-    { href: '/account', icon: '👤', label: 'アカウント' },
+    { href: '/', icon: Network, label: 'つながり' },
+    { href: '/card', icon: Camera, label: 'カード' },
+    { href: '/calendar', icon: CalendarDays, label: 'イベント' },
+    { href: '/account', icon: UserRound, label: 'アカウント' },
   ];
 
   // Global pending connection polling (QRスキャンされた側の自動リダイレクト)
@@ -123,10 +124,8 @@
 				>
 					{#if isAccount && avatarUrl}
 						<img src={avatarUrl} alt="" class="h-6 w-6 rounded-full object-cover" />
-					{:else if item.logo}
-						<img src={item.logo} alt="SENMYAKU" class="h-6 w-6 object-contain" />
 					{:else}
-						<span class="text-xl">{item.icon}</span>
+						<item.icon class="h-6 w-6" strokeWidth={2} />
 					{/if}
 					<span class="text-xs">{item.label}</span>
 				</a>
