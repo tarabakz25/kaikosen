@@ -10,11 +10,13 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 	}
 
 	const body = await request.json();
-	const { nickname, schoolName, tags, pastContests } = body as {
+	const { nickname, schoolName, tags, pastContests, message, avatarUrl } = body as {
 		nickname: string;
 		schoolName: string;
 		tags: string[];
 		pastContests: string[];
+		message?: string;
+		avatarUrl?: string | null;
 	};
 
 	const pastContestsList = pastContests ?? [];
@@ -27,7 +29,9 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 			nickname,
 			schoolName,
 			tags,
-			pastContests: pastContestsList
+			pastContests: pastContestsList,
+			message: message ?? null,
+			avatarUrl: avatarUrl ?? null
 		})
 		.onConflictDoUpdate({
 			target: profile.userId,
@@ -36,6 +40,8 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 				schoolName,
 				tags,
 				pastContests: pastContestsList,
+				message: message ?? null,
+				avatarUrl: avatarUrl ?? null,
 				updatedAt: new Date()
 			}
 		})

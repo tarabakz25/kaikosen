@@ -10,6 +10,7 @@ export const profile = pgTable('profile', {
 	schoolName: text('school_name').notNull(),
 	tags: text('tags').array().notNull().default(sql`'{}'::text[]`),
 	pastContests: text('past_contests').array().notNull().default(sql`'{}'::text[]`),
+	message: text('message'),
 	avatarUrl: text('avatar_url'),
 	createdAt: timestamp('created_at').notNull().defaultNow(),
 	updatedAt: timestamp('updated_at').notNull().defaultNow()
