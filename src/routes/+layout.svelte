@@ -2,8 +2,9 @@
   import './layout.css';
   import favicon from '$lib/assets/favicon.svg';
   import logo from '$lib/assets/logo.webp';
-  import { page } from '$app/state';
-  import { onMount } from 'svelte';
+  import { page, navigating } from '$app/state';
+  import { onMount, onDestroy } from 'svelte';
+  import { goto } from '$app/navigation';
 
   let { children, data } = $props();
 
@@ -12,21 +13,46 @@
     { href: '/card', icon: '📷', label: 'カード' },
     { href: '/calendar', icon: '📅', label: 'イベント' },
     { href: '/account', icon: '👤', label: 'アカウント' },
-  ]; 
-  
+  ];
+
+  // Global pending connection polling (QRスキャンされた側の自動リダイレクト)
+  let pollIntervalId: ReturnType<typeof setInterval> | null = null;
+
+  function startGlobalPoll() {
+    if (pollIntervalId || !data.user) return;
+    pollIntervalId = setInterval(async () => {
+      if (page.url.pathname.startsWith('/connect')) return;
+      const res = await fetch('/api/connections?pending=true');
+      if (!res.ok) return;
+      const body = await res.json();
+      if (body.pending) {
+        stopGlobalPoll();
+        goto(`/connect?uid=${body.pending.userId}`);
+      }
+    }, 2000);
+  }
+
+  function stopGlobalPoll() {
+    if (pollIntervalId) { clearInterval(pollIntervalId); pollIntervalId = null; }
+  }
+
+  onDestroy(stopGlobalPoll);
+
   onMount(() => {
+     startGlobalPoll();
+
      const d = document;
      const config = {
        kitId: 'zkw7npd',
        scriptTimeout: 3000,
        async: true,
      };
- 
+
      const h = d.documentElement;
      const t = setTimeout(() => {
        h.className = h.className.replace(/\bwf-loading\b/g, '') + ' wf-inactive';
      }, config.scriptTimeout);
- 
+
      const tk = d.createElement('script');
      const legacyTk = tk as HTMLScriptElement & {
        onreadystatechange?: ((this: HTMLScriptElement & { readyState?: string }, ev: Event) => unknown) | null;
@@ -35,7 +61,7 @@
      let f = false;
      const s = d.getElementsByTagName('script')[0];
      let a: string | undefined;
- 
+
      h.className += ' wf-loading';
      tk.src = `https://use.typekit.net/${config.kitId}.js`;
      tk.async = true;
@@ -54,12 +80,18 @@
      legacyTk.onreadystatechange = function () {
        handleLoad.call(legacyTk);
      };
- 
+
      s.parentNode?.insertBefore(tk, s);
    });
 </script>
 
 <svelte:head><link rel="icon" href={favicon} /></svelte:head>
+
+{#if navigating}
+  <div class="fixed inset-0 z-[100] flex items-center justify-center bg-kaiko-bg/60 backdrop-blur-sm pointer-events-none">
+    <div class="landolt-ring"></div>
+  </div>
+{/if}
 
 <div class="h-screen overflow-y-auto bg-kaiko-bg text-kaiko-text pb-16">
   {#if data.user}
@@ -83,3 +115,18 @@
   </div>
 </nav>
 {/if}
+
+<style>
+  .landolt-ring {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 5px solid var(--color-kaiko-accent);
+    border-right-color: transparent;
+    animation: landolt-spin 0.75s linear infinite;
+  }
+
+  @keyframes landolt-spin {
+    to { transform: rotate(360deg); }
+  }
+</style>

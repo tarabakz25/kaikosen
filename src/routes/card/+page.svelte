@@ -12,7 +12,6 @@
   let scanCanvas = $state<HTMLCanvasElement>(null as any);
   let stream: MediaStream | null = null;
   let scanLoopId: number | null = null;
-  let pollIntervalId: ReturnType<typeof setInterval> | null = null;
   let scannedUserId = $state<string | null>(null);
   let alias = $state('');
   let connecting = $state(false);
@@ -84,28 +83,11 @@
     }
   }
 
-  function startPoll() {
-    if (pollIntervalId) return;
-    pollIntervalId = setInterval(async () => {
-      const res = await fetch('/api/connections?pending=true');
-      if (!res.ok) return;
-      const body = await res.json();
-      if (body.pending) {
-        stopPoll();
-        goto(`/connect?uid=${body.pending.userId}`);
-      }
-    }, 2000);
-  }
-
-  function stopPoll() {
-    if (pollIntervalId) { clearInterval(pollIntervalId); pollIntervalId = null; }
-  }
-
-  onDestroy(() => { stopScan(); stopPoll(); });
+  onDestroy(stopScan);
 
   $effect(() => {
-    if (tab === 'scan') { startScan(); stopPoll(); }
-    else { stopScan(); startPoll(); }
+    if (tab === 'scan') startScan();
+    else stopScan();
   });
 </script>
 
