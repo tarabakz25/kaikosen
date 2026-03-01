@@ -23,7 +23,8 @@ export const handle: Handle = async ({ event, resolve }) => {
 			id: user.id,
 			name: user.user_metadata?.full_name ?? user.email ?? '',
 			email: user.email ?? '',
-			image: user.user_metadata?.avatar_url ?? null
+			image: user.user_metadata?.avatar_url ?? null,
+			message: (user.user_metadata?.message as string) ?? null
 		};
 	}
 

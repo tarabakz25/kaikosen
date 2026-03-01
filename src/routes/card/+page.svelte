@@ -13,8 +13,6 @@
   let stream: MediaStream | null = null;
   let scanLoopId: number | null = null;
   let scannedUserId = $state<string | null>(null);
-  let alias = $state('');
-  let connecting = $state(false);
   let scanError = $state('');
 
   const userId = data.user?.id;
@@ -67,23 +65,24 @@
     if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
   }
 
-  async function connect() {
-    if (!scannedUserId || !alias.trim()) return;
-    connecting = true;
-    const res = await fetch('/api/connections', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ targetUserId: scannedUserId, alias: alias.trim() })
-    });
-    connecting = false;
-    if (res.ok) {
-      scannedUserId = null;
-      alias = '';
-      goto('/');
-    }
+  function startPoll() {
+    if (pollIntervalId) return;
+    pollIntervalId = setInterval(async () => {
+      const res = await fetch('/api/connections?pending=true');
+      if (!res.ok) return;
+      const body = await res.json();
+      if (body.pending) {
+        stopPoll();
+        goto(`/connect?uid=${body.pending.userId}`);
+      }
+    }, 2000);
   }
 
-  onDestroy(stopScan);
+  function stopPoll() {
+    if (pollIntervalId) { clearInterval(pollIntervalId); pollIntervalId = null; }
+  }
+
+  onDestroy(() => { stopScan(); stopPoll(); });
 
   $effect(() => {
     if (tab === 'scan') startScan();
@@ -140,21 +139,15 @@
 {#if scannedUserId}
   <div class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 px-4">
     <div class="bg-kaiko-surface rounded-2xl p-6 w-full max-w-sm shadow-xl border border-kaiko-border">
-      <h2 class="text-xl font-bold text-kaiko-text mb-2">繋がりを追加</h2>
-      <p class="text-kaiko-muted text-sm mb-4">この人の二つ名（あだ名）を入力してください</p>
-      <input
-        bind:value={alias}
-        type="text"
-        placeholder="例: ロボット部の佐藤くん"
-        class="w-full bg-kaiko-bg border border-kaiko-border rounded-lg px-4 py-3 text-kaiko-text placeholder-kaiko-muted focus:outline-none focus:border-kaiko-accent mb-4"
-      />
+      <h2 class="text-xl font-bold text-kaiko-text mb-2">QRコードをスキャンしました</h2>
+      <p class="text-kaiko-muted text-sm mb-4">この人のプロフィールを確認できます</p>
       <div class="flex gap-3">
         <button onclick={() => { scannedUserId = null; tab = 'scan'; startScan(); }} class="flex-1 py-3 rounded-xl border border-kaiko-border text-kaiko-muted hover:text-kaiko-text">
           キャンセル
         </button>
-        <button onclick={connect} disabled={!alias.trim() || connecting} class="flex-1 py-3 rounded-xl bg-kaiko-accent hover:bg-kaiko-accent-hover disabled:bg-kaiko-border disabled:text-kaiko-muted text-white font-semibold">
-          {connecting ? '登録中...' : '追加する'}
-        </button>
+        <a href="/profile/{scannedUserId}" class="flex-1 py-3 rounded-xl bg-kaiko-accent hover:bg-kaiko-accent-hover text-white font-semibold text-center">
+          プロフィールを見る
+        </a>
       </div>
     </div>
   </div>

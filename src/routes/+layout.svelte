@@ -1,4 +1,5 @@
 <script lang="ts">
+
   import './layout.css';
   import favicon from '$lib/assets/favicon.svg';
   import logo from '$lib/assets/logo.webp';
@@ -6,7 +7,8 @@
   import { onMount, onDestroy } from 'svelte';
   import { goto } from '$app/navigation';
 
-  let { children, data } = $props();
+	let { children, data } = $props();
+
 
   const navItems = [
     { href: '/', icon: '🕸️', label: 'つながり' },
@@ -103,17 +105,34 @@
 </div>
 
 {#if data.user}
-<nav class="fixed bottom-0 left-0 right-0 bg-kaiko-surface border-t border-kaiko-border z-50 shadow-sm">
-  <div class="flex justify-around items-center h-16 max-w-lg mx-auto px-4">
-    {#each navItems as item}
-      {@const isActive = page.url.pathname === item.href || (item.href !== '/' && page.url.pathname.startsWith(item.href))}
-      <a href={item.href} class="flex flex-col items-center gap-0.5 px-3 py-2 rounded-lg transition-colors {isActive ? 'text-kaiko-accent' : 'text-kaiko-muted hover:text-kaiko-text'}">
-        <span class="text-xl">{item.icon}</span>
-        <span class="text-xs">{item.label}</span>
-      </a>
-    {/each}
-  </div>
-</nav>
+	<nav
+		class="fixed right-0 bottom-0 left-0 z-50 border-t border-kaiko-border bg-kaiko-surface shadow-sm"
+	>
+		<div class="mx-auto flex h-16 max-w-lg items-center justify-around px-4">
+			{#each navItems as item}
+				{@const isActive =
+					page.url.pathname === item.href ||
+					(item.href !== '/' && page.url.pathname.startsWith(item.href))}
+				{@const isAccount = item.href === '/account'}
+				{@const avatarUrl = data.userProfile?.avatarUrl ?? data.user?.image}
+				<a
+					href={item.href}
+					class="flex flex-col items-center gap-0.5 rounded-lg px-3 py-2 transition-colors {isActive
+						? 'text-kaiko-accent'
+						: 'text-kaiko-muted hover:text-kaiko-text'}"
+				>
+					{#if isAccount && avatarUrl}
+						<img src={avatarUrl} alt="" class="h-6 w-6 rounded-full object-cover" />
+					{:else if item.logo}
+						<img src={item.logo} alt="SENMYAKU" class="h-6 w-6 object-contain" />
+					{:else}
+						<span class="text-xl">{item.icon}</span>
+					{/if}
+					<span class="text-xs">{item.label}</span>
+				</a>
+			{/each}
+		</div>
+	</nav>
 {/if}
 
 <style>

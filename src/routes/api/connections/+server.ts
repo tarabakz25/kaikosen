@@ -41,35 +41,9 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 	return Response.json(rows);
 };
 
-export const POST: RequestHandler = async ({ request, locals }) => {
+export const POST: RequestHandler = async ({ locals }) => {
 	if (!locals.user) {
 		return new Response('Unauthorized', { status: 401 });
 	}
-
-	const body = await request.json();
-	const { targetUserId, alias } = body as { targetUserId: string; alias: string };
-
-	const userId = locals.user.id;
-
-	// upsert: 既存の接続があればaliasを更新
-	const [newConnection] = await db
-		.insert(connection)
-		.values({ userId, targetUserId, alias })
-		.onConflictDoUpdate({
-			target: [connection.userId, connection.targetUserId],
-			set: { alias }
-		})
-		.returning();
-
-	// B→A の逆方向が存在しなければ自動作成 (alias='' でpending状態)
-	const existing = await db
-		.select()
-		.from(connection)
-		.where(and(eq(connection.userId, targetUserId), eq(connection.targetUserId, userId)))
-		.limit(1);
-	if (existing.length === 0) {
-		await db.insert(connection).values({ userId: targetUserId, targetUserId: userId, alias: '' });
-	}
-
-	return Response.json(newConnection, { status: 201 });
+	return Response.json({ error: '繋がりの追加は現在利用できません' }, { status: 403 });
 };

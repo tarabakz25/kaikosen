@@ -1,11 +1,13 @@
 <script lang="ts">
+	import { onDestroy } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { PAST_CONTESTS_TITLE } from '$lib/contests';
+	import { supabase } from '$lib/auth-client';
 
 	let { data } = $props();
 
-	const currentYear = new Date().getFullYear();
-	const years = Array.from({ length: currentYear - 1960 }, (_, i) => currentYear - i);
+	const maxYear = 2025;
+	const years = Array.from({ length: maxYear - 1960 + 1 }, (_, i) => maxYear - i);
 
 	let nickname = $state(data.userProfile?.nickname ?? '');
 	let schoolName = $state(data.userProfile?.schoolName ?? '');
@@ -13,9 +15,81 @@
 	let tags = $state<string[]>(data.userProfile?.tags ?? []);
 	let pastContests = $state<string[]>(data.userProfile?.pastContests ?? []);
 	let selectedContestId = $state(PAST_CONTESTS_TITLE[0].id);
-	let selectedYear = $state(currentYear);
+	let selectedYear = $state(maxYear);
+	let bioMessage = $state(data.userProfile?.message ?? '');
+	let avatarUrl = $state<string | null>(data.userProfile?.avatarUrl ?? data.user?.image ?? null);
 	let saving = $state(false);
-	let message = $state('');
+	let errorMessage = $state('');
+	let showCamera = $state(false);
+	let videoEl = $state<HTMLVideoElement | null>(null);
+	let stream = $state<MediaStream | null>(null);
+	let capturing = $state(false);
+
+	async function startCamera() {
+		showCamera = true;
+		await new Promise((r) => setTimeout(r, 100));
+		try {
+			stream = await navigator.mediaDevices.getUserMedia({
+				video: { facingMode: 'user', width: { ideal: 480 }, height: { ideal: 480 } }
+			});
+			if (videoEl) {
+				videoEl.srcObject = stream;
+				await videoEl.play();
+			}
+		} catch (e) {
+			errorMessage = 'カメラへのアクセスが拒否されました';
+			showCamera = false;
+		}
+	}
+
+	function stopCamera() {
+		if (stream) {
+			stream.getTracks().forEach((t) => t.stop());
+			stream = null;
+		}
+		showCamera = false;
+	}
+
+	async function capturePhoto() {
+		const userId = data.user?.id;
+		if (!videoEl || !userId) return;
+		capturing = true;
+		try {
+			const canvas = document.createElement('canvas');
+			const size = Math.min(videoEl.videoWidth, videoEl.videoHeight);
+			canvas.width = size;
+			canvas.height = size;
+			const ctx = canvas.getContext('2d');
+			if (!ctx) return;
+			const sx = (videoEl.videoWidth - size) / 2;
+			const sy = (videoEl.videoHeight - size) / 2;
+			ctx.drawImage(videoEl, sx, sy, size, size, 0, 0, size, size);
+			canvas.toBlob(
+				async (blob) => {
+					if (!blob) return;
+					const path = `face/${userId}.png`;
+					const { error } = await supabase.storage.from('assets').upload(path, blob, {
+						contentType: 'image/png',
+						upsert: true
+					});
+					if (error) {
+						errorMessage = 'アップロードに失敗しました';
+						return;
+					}
+					const { data: urlData } = supabase.storage.from('assets').getPublicUrl(path);
+					// キャッシュ回避のためタイムスタンプを付与（再撮影時に確実に反映）
+					avatarUrl = `${urlData.publicUrl}?v=${Date.now()}`;
+					stopCamera();
+				},
+				'image/png',
+				0.9
+			);
+		} finally {
+			capturing = false;
+		}
+	}
+
+	onDestroy(() => stopCamera());
 
 	function addPastContest() {
 		const entry = `${selectedContestId}-${selectedYear}`;
@@ -58,20 +132,27 @@
 
 	async function save() {
 		saving = true;
-		message = '';
+		errorMessage = '';
 		try {
 			const res = await fetch('/api/profile', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ nickname, schoolName, tags, pastContests })
+				body: JSON.stringify({
+					nickname,
+					schoolName,
+					tags,
+					pastContests,
+					message: bioMessage,
+					avatarUrl
+				})
 			});
 			if (res.ok) {
-				goto('/account');
+				await goto('/account', { invalidateAll: true });
 			} else {
-				message = '保存に失敗しました';
+				errorMessage = '保存に失敗しました';
 			}
 		} catch {
-			message = 'エラーが発生しました';
+			errorMessage = 'エラーが発生しました';
 		}
 		saving = false;
 	}
@@ -84,6 +165,32 @@
 	</div>
 
 	<div class="space-y-4">
+		<!-- アイコン -->
+		<div class="flex flex-col items-center gap-3">
+			<div class="relative">
+				{#if avatarUrl}
+					<img
+						src={avatarUrl}
+						alt="アイコン"
+						class="h-24 w-24 rounded-full border-2 border-kaiko-border object-cover"
+					/>
+				{:else}
+					<div
+						class="flex h-24 w-24 items-center justify-center rounded-full bg-kaiko-accent text-3xl font-bold text-white"
+					>
+						{nickname?.[0] ?? '?'}
+					</div>
+				{/if}
+			</div>
+			<button
+				type="button"
+				onclick={startCamera}
+				class="rounded-lg border border-kaiko-border bg-kaiko-surface px-4 py-2 text-sm font-medium text-kaiko-text transition-colors hover:bg-kaiko-surface-alt"
+			>
+				画像を変更
+			</button>
+		</div>
+
 		<div>
 			<label class="mb-1 block text-sm font-medium text-kaiko-muted">ニックネーム</label>
 			<input
@@ -127,7 +234,7 @@
 		</div>
 
 		<div>
-			<p class="mb-2 text-sm font-medium text-kaiko-muted">参加したことのあるコンテスト</p>
+			<p class="mb-2 text-sm font-medium text-kaiko-muted">参加したイベント</p>
 			<div class="mb-3 flex flex-wrap gap-2">
 				<select
 					bind:value={selectedContestId}
@@ -171,8 +278,18 @@
 			</div>
 		</div>
 
-		{#if message}
-			<p class="text-sm text-red-500">{message}</p>
+		<div>
+			<label class="mb-1 block text-sm font-medium text-kaiko-muted">自己紹介</label>
+			<textarea
+				bind:value={bioMessage}
+				rows="3"
+				placeholder="自己紹介を入力（任意）"
+				class="w-full resize-none rounded-lg border border-kaiko-border bg-kaiko-surface px-4 py-3 text-kaiko-text placeholder-kaiko-muted focus:border-kaiko-accent focus:outline-none"
+			></textarea>
+		</div>
+
+		{#if errorMessage}
+			<p class="text-sm text-red-500">{errorMessage}</p>
 		{/if}
 
 		<button
@@ -184,3 +301,37 @@
 		</button>
 	</div>
 </div>
+
+{#if showCamera}
+	<div
+		class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/90 p-4"
+		role="dialog"
+		aria-modal="true"
+		aria-label="アイコン撮影"
+	>
+		<p class="mb-4 text-sm text-white">枠に顔を合わせて撮影してください</p>
+		<div
+			class="relative aspect-square w-full max-w-[320px] overflow-hidden rounded-full border-4 border-white"
+		>
+			<video bind:this={videoEl} class="h-full w-full object-cover" playsinline muted autoplay
+			></video>
+		</div>
+		<div class="mt-6 flex gap-4">
+			<button
+				type="button"
+				onclick={stopCamera}
+				class="rounded-xl border border-white/50 px-6 py-3 text-white transition-colors hover:bg-white/10"
+			>
+				キャンセル
+			</button>
+			<button
+				type="button"
+				onclick={capturePhoto}
+				disabled={capturing}
+				class="rounded-xl bg-kaiko-accent px-6 py-3 font-semibold text-white transition-colors hover:bg-kaiko-accent-hover disabled:opacity-50"
+			>
+				{capturing ? '撮影中...' : '撮影'}
+			</button>
+		</div>
+	</div>
+{/if}
