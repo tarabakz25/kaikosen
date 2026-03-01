@@ -6,7 +6,7 @@
 	let { children, data } = $props();
 
 	const navItems = [
-		{ href: '/', icon: '🕸️', label: 'SENMYAKU' },
+		{ href: '/', icon: '🕸️', label: 'つながり', logo: '/assets/logo/senmyaku.png' },
 		{ href: '/card', icon: '📷', label: '交換' },
 		{ href: '/calendar', icon: '📅', label: 'イベント' },
 		{ href: '/account', icon: '👤', label: 'アカウント' }
@@ -38,6 +38,8 @@
 				>
 					{#if isAccount && avatarUrl}
 						<img src={avatarUrl} alt="" class="h-6 w-6 rounded-full object-cover" />
+					{:else if item.logo}
+						<img src={item.logo} alt="SENMYAKU" class="h-6 w-6 object-contain" />
 					{:else}
 						<span class="text-xl">{item.icon}</span>
 					{/if}
