@@ -3,6 +3,7 @@
 	import { parseUtc } from '$lib/date';
 
 	let { data } = $props();
+	const isLoggedIn = !!data.userId;
 
 	function formatDate(d: Date | string) {
 		return parseUtc(d).toLocaleDateString('ja-JP', {
@@ -22,7 +23,17 @@
 </script>
 
 <div class="mx-auto max-w-lg px-4 py-6">
-	<h1 class="mb-6 text-2xl font-bold text-kaiko-text">イベント</h1>
+	<div class="mb-6 flex items-center justify-between">
+		<h1 class="text-2xl font-bold text-kaiko-text">イベント</h1>
+		{#if isLoggedIn}
+			<a
+				href={resolve('/calendar/new')}
+				class="rounded-xl bg-kaiko-accent px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-kaiko-accent-hover"
+			>
+				+ 作成
+			</a>
+		{/if}
+	</div>
 
 	{#if data.events.length === 0}
 		<p class="py-12 text-center text-kaiko-muted">イベントはまだありません</p>

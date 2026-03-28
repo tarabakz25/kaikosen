@@ -77,6 +77,15 @@
 		class="mb-4 inline-block text-sm text-kaiko-muted hover:text-kaiko-text">← 戻る</a
 	>
 
+	{#if data.event.imageUrl}
+		<img
+			src={data.event.imageUrl}
+			alt={data.event.title}
+			class="mb-4 w-full rounded-2xl object-cover"
+			style="max-height: 220px;"
+		/>
+	{/if}
+
 	<h1 class="mb-2 text-2xl font-bold text-kaiko-text">{data.event.title}</h1>
 
 	<div class="mb-4 space-y-1">
@@ -168,6 +177,56 @@
 			{/if}
 		{/each}
 	</div>
+
+	{#if data.isOrganizer}
+		<div class="mt-8">
+			<h2 class="mb-3 text-lg font-semibold text-kaiko-text">参加者ダッシュボード (主催者用)</h2>
+			{#if data.attendees.length === 0}
+				<p class="text-sm text-kaiko-muted">まだ参加者はいません</p>
+			{:else}
+				<div class="overflow-hidden rounded-xl border border-kaiko-border">
+					<table class="w-full text-sm">
+						<thead class="bg-kaiko-surface-alt">
+							<tr>
+								<th class="px-4 py-3 text-left font-medium text-kaiko-muted">ニックネーム</th>
+								<th class="px-4 py-3 text-left font-medium text-kaiko-muted">所属</th>
+							</tr>
+						</thead>
+						<tbody>
+							{#each sortedAttendees as attendee (attendee.userId)}
+								<tr class="border-t border-kaiko-border hover:bg-kaiko-surface-alt">
+									<td class="px-4 py-3">
+										<a
+											href={attendee.userId === data.userId
+												? resolve('/account')
+												: resolve('/profile/[userId]', { userId: attendee.userId })}
+											class="flex items-center gap-2 text-kaiko-accent hover:underline"
+										>
+											{#if attendee.avatarUrl}
+												<img
+													src={attendee.avatarUrl}
+													alt=""
+													class="h-6 w-6 shrink-0 rounded-full object-cover"
+												/>
+											{:else}
+												<div
+													class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-kaiko-accent text-xs font-bold text-white"
+												>
+													{attendee.nickname?.[0] ?? '?'}
+												</div>
+											{/if}
+											<span class="truncate">{attendee.nickname ?? '不明'}</span>
+										</a>
+									</td>
+									<td class="px-4 py-3 text-kaiko-muted">{attendee.schoolName ?? '—'}</td>
+								</tr>
+							{/each}
+						</tbody>
+					</table>
+				</div>
+			{/if}
+		</div>
+	{/if}
 </div>
 
 {#if showThankYouPopup}

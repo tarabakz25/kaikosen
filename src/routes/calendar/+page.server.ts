@@ -56,6 +56,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 	}));
 
 	return {
-		events: mappedEvents
+		events: mappedEvents,
+		userId: locals.user?.id ?? null
 	};
 };

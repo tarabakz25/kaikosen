@@ -1,5 +1,22 @@
 # Changelog
 
+## [Unreleased] - 2026-03-28
+
+### Added
+
+#### ユーザーによるイベント作成機能 (close #8)
+
+- `src/lib/server/db/schema.ts`: `event` テーブルに `image_url` カラムを追加
+- `src/lib/types.ts`: `Event` 型に `imageUrl` フィールドを追加
+- `src/routes/api/events/+server.ts`: `POST /api/events` エンドポイントを追加（認証済みユーザーがイベントを作成可能）
+- `src/routes/calendar/new/+page.server.ts` / `+page.svelte`: イベント作成フォームページを新設
+  - タイトル・開始日時（必須）、終了日時・場所・ディスクリプション・詳細ページ URL・イベント画像 URL（任意）を入力可能
+  - 場所入力時に Google マップ確認リンクを表示
+  - 画像 URL 入力時にプレビュー表示
+- `src/routes/calendar/+page.svelte` / `+page.server.ts`: ログイン済みユーザーに「+ 作成」ボタンを表示
+- `src/routes/calendar/[slug]/+page.server.ts`: `isOrganizer` フラグを返却（作成者判定）
+- `src/routes/calendar/[slug]/+page.svelte`: イベント画像表示・主催者向け参加者ダッシュボード（テーブル形式、プロフィールリンク付き）を追加
+
 ## [Unreleased] - 2026-03-01
 
 ### Changed

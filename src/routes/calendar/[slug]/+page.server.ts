@@ -95,5 +95,14 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 		connectionUserIds = conns.map((c) => c.targetUserId);
 	}
 
-	return { event: ev, attendees, isAttending, connectionUserIds, userId: locals.user?.id ?? null };
+	const isOrganizer = locals.user?.id === ev.createdBy;
+
+	return {
+		event: ev,
+		attendees,
+		isAttending,
+		connectionUserIds,
+		userId: locals.user?.id ?? null,
+		isOrganizer
+	};
 };
