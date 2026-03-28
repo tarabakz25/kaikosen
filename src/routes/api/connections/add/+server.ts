@@ -12,7 +12,12 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 
 	const body = await request.json();
 	const { targetUserId, alias } = body as { targetUserId: string; alias: string };
-	if (!targetUserId || targetUserId === locals.user.id || typeof alias !== 'string' || !alias.trim()) {
+	if (
+		!targetUserId ||
+		targetUserId === locals.user.id ||
+		typeof alias !== 'string' ||
+		!alias.trim()
+	) {
 		return Response.json({ error: 'Invalid request' }, { status: 400 });
 	}
 

@@ -33,15 +33,15 @@ export const GET: RequestHandler = async ({ locals }) => {
 	const sharedCounts =
 		myEventIds.length > 0 && connectedUserIds.length > 0
 			? await db
-				.select({ userId: eventAttendee.userId, count: count() })
-				.from(eventAttendee)
-				.where(
-					and(
-						inArray(eventAttendee.userId, connectedUserIds),
-						inArray(eventAttendee.eventId, myEventIds)
+					.select({ userId: eventAttendee.userId, count: count() })
+					.from(eventAttendee)
+					.where(
+						and(
+							inArray(eventAttendee.userId, connectedUserIds),
+							inArray(eventAttendee.eventId, myEventIds)
+						)
 					)
-				)
-				.groupBy(eventAttendee.userId)
+					.groupBy(eventAttendee.userId)
 			: [];
 
 	const countMap = Object.fromEntries(sharedCounts.map((r) => [r.userId, Number(r.count)]));

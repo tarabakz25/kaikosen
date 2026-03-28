@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onDestroy } from 'svelte';
 	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import { PAST_CONTESTS_TITLE } from '$lib/contests';
 	import { supabase } from '$lib/auth-client';
 
@@ -36,7 +37,7 @@
 				videoEl.srcObject = stream;
 				await videoEl.play();
 			}
-		} catch (e) {
+		} catch {
 			errorMessage = 'カメラへのアクセスが拒否されました';
 			showCamera = false;
 		}
@@ -147,7 +148,7 @@
 				})
 			});
 			if (res.ok) {
-				await goto('/account', { invalidateAll: true });
+				await goto(resolve('/account'), { invalidateAll: true });
 			} else {
 				errorMessage = '保存に失敗しました';
 			}
@@ -160,7 +161,9 @@
 
 <div class="mx-auto max-w-lg px-4 py-8">
 	<div class="mb-6 flex items-center gap-3">
-		<a href="/account" class="text-kaiko-muted transition-colors hover:text-kaiko-text">← 戻る</a>
+		<a href={resolve('/account')} class="text-kaiko-muted transition-colors hover:text-kaiko-text"
+			>← 戻る</a
+		>
 		<h1 class="text-2xl font-bold text-kaiko-text">プロフィール編集</h1>
 	</div>
 
@@ -214,7 +217,7 @@
 		<div>
 			<label class="mb-1 block text-sm font-medium text-kaiko-muted">タグ（スキル・興味）</label>
 			<div class="mb-2 flex flex-wrap gap-2">
-				{#each tags as tag}
+				{#each tags as tag (tag)}
 					<span
 						class="flex items-center gap-1 rounded-full bg-kaiko-accent-muted px-3 py-1 text-sm text-kaiko-accent-dark"
 					>
@@ -240,7 +243,7 @@
 					bind:value={selectedContestId}
 					class="rounded-lg border border-kaiko-border bg-kaiko-surface px-3 py-2 text-sm text-kaiko-text focus:border-kaiko-accent focus:outline-none"
 				>
-					{#each PAST_CONTESTS_TITLE as contest}
+					{#each PAST_CONTESTS_TITLE as contest (contest.id)}
 						<option value={contest.id}>{contest.title}</option>
 					{/each}
 				</select>
@@ -248,7 +251,7 @@
 					bind:value={selectedYear}
 					class="rounded-lg border border-kaiko-border bg-kaiko-surface px-3 py-2 text-sm text-kaiko-text focus:border-kaiko-accent focus:outline-none"
 				>
-					{#each years as y}
+					{#each years as y (y)}
 						<option value={y}>{y}年</option>
 					{/each}
 				</select>
@@ -261,7 +264,7 @@
 				</button>
 			</div>
 			<div class="flex flex-col gap-2">
-				{#each pastContests as entry}
+				{#each pastContests as entry (entry)}
 					<div
 						class="flex items-center justify-between rounded-xl border border-kaiko-border bg-kaiko-surface px-4 py-3"
 					>

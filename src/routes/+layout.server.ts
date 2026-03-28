@@ -16,13 +16,14 @@ export const load: LayoutServerLoad = async ({ locals, url }) => {
 		return { user: null, userProfile: null };
 	}
 
-	const [userProfile] = await db
-		.select()
-		.from(profile)
-		.where(eq(profile.userId, user.id))
-		.limit(1);
+	const [userProfile] = await db.select().from(profile).where(eq(profile.userId, user.id)).limit(1);
 
-	if (!userProfile && url.pathname !== '/account' && url.pathname !== '/account/edit' && url.pathname !== '/login') {
+	if (
+		!userProfile &&
+		url.pathname !== '/account' &&
+		url.pathname !== '/account/edit' &&
+		url.pathname !== '/login'
+	) {
 		redirect(302, '/account/edit');
 	}
 

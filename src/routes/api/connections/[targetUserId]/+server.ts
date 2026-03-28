@@ -13,12 +13,7 @@ export const DELETE: RequestHandler = async ({ locals, params }) => {
 
 	await db
 		.delete(connection)
-		.where(
-			and(
-				eq(connection.userId, locals.user.id),
-				eq(connection.targetUserId, targetUserId)
-			)
-		);
+		.where(and(eq(connection.userId, locals.user.id), eq(connection.targetUserId, targetUserId)));
 
 	return new Response(null, { status: 204 });
 };

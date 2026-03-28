@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import { parseUtc } from '$lib/date';
 
 	type FellowAttendee = { userId: string; nickname: string | null; avatarUrl: string | null };
@@ -47,7 +48,7 @@
 
 	async function toggleAttend() {
 		if (!data.userId) {
-			goto('/login');
+			goto(resolve('/login'));
 			return;
 		}
 		loading = true;
@@ -71,8 +72,9 @@
 </script>
 
 <div class="mx-auto max-w-lg px-4 py-6">
-	<a href="/calendar" class="mb-4 inline-block text-sm text-kaiko-muted hover:text-kaiko-text"
-		>← 戻る</a
+	<a
+		href={resolve('/calendar')}
+		class="mb-4 inline-block text-sm text-kaiko-muted hover:text-kaiko-text">← 戻る</a
 	>
 
 	<h1 class="mb-2 text-2xl font-bold text-kaiko-text">{data.event.title}</h1>
@@ -96,7 +98,7 @@
 			<a
 				href={data.event.url}
 				target="_blank"
-				rel="noopener"
+				rel="noopener external"
 				class="flex-1 rounded-xl border border-kaiko-border bg-kaiko-surface-alt py-3 text-center font-medium text-kaiko-text transition-colors hover:bg-kaiko-accent-muted"
 			>
 				詳細ページ ↗
@@ -117,15 +119,13 @@
 
 	<h2 class="mb-3 text-lg font-semibold text-kaiko-text">参加者 ({data.attendees.length}人)</h2>
 	<div class="space-y-2">
-		{#each sortedAttendees as attendee}
+		{#each sortedAttendees as attendee (attendee.userId)}
 			{@const isSelf = data.userId && attendee.userId === data.userId}
 			{@const isConnection = !isSelf && data.connectionUserIds.includes(attendee.userId)}
 			{@const common = commonCount(attendee.pastContests)}
-			{@const profileHref = isSelf ? '/account' : `/profile/${attendee.userId}`}
-			<a
-				href={profileHref}
-				class="flex items-center gap-3 rounded-lg border border-kaiko-border bg-kaiko-surface px-4 py-3 transition-colors hover:bg-kaiko-surface-alt"
-			>
+			{@const rowClass =
+				'flex items-center gap-3 rounded-lg border border-kaiko-border bg-kaiko-surface px-4 py-3 transition-colors hover:bg-kaiko-surface-alt'}
+			{#snippet attendeeRowInner()}
 				{#if attendee.avatarUrl}
 					<img src={attendee.avatarUrl} alt="" class="h-8 w-8 shrink-0 rounded-full object-cover" />
 				{:else}
@@ -158,7 +158,14 @@
 						{/if}
 					{/if}
 				</div>
-			</a>
+			{/snippet}
+			{#if isSelf}
+				<a href={resolve('/account')} class={rowClass}>{@render attendeeRowInner()}</a>
+			{:else}
+				<a href={resolve('/profile/[userId]', { userId: attendee.userId })} class={rowClass}
+					>{@render attendeeRowInner()}</a
+				>
+			{/if}
 		{/each}
 	</div>
 </div>
@@ -185,7 +192,7 @@
 					<div
 						class="mb-6 max-h-40 overflow-y-auto rounded-xl border border-kaiko-border bg-kaiko-bg"
 					>
-						{#each fellowAttendees as person}
+						{#each fellowAttendees as person (person.userId)}
 							<div class="flex items-center gap-3 px-4 py-3">
 								{#if person.avatarUrl}
 									<img
@@ -205,7 +212,7 @@
 						{/each}
 					</div>
 					<a
-						href="/calendar"
+						href={resolve('/calendar')}
 						class="block w-full rounded-xl bg-kaiko-accent py-3 font-semibold text-white transition-colors hover:bg-kaiko-accent-hover"
 					>
 						イベント一覧に戻る
