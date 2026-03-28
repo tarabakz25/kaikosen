@@ -4,6 +4,10 @@
 
 ### Changed
 
+#### CI ワークフロー分割
+- 単一の `ci.yml` を廃止し、`ci-lint.yml` / `ci-typecheck.yml` / `ci-test.yml` / `ci-build.yml` に分離（PR 上でジョブが別チェックとして並列実行される）
+- `CONTRIBUTING.md` の Actions 説明を分割後の構成に合わせて更新
+
 #### コントリビューション手順の更新
 
 - `CONTRIBUTING.md` を kaikosen 現行スタック（SvelteKit、Bun、Vitest 二層、Drizzle、環境変数）に合わせて全面刷新。旧 `kmc-platform` 向けの npm / React 記述を削除
