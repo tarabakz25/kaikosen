@@ -17,6 +17,10 @@
 
 ### Fixed
 
+#### CI ビルドで `DATABASE_URL` 未設定エラー
+
+- `src/lib/server/db/index.ts`: SvelteKit の postbuild `analyse` がサーバーモジュールを読み込む時点では環境変数が無いことがある。`$app/environment` の `building` が true のときだけ接続しないプレースホルダー URL で postgres クライアントを組み立て、実行時は引き続き `DATABASE_URL` 必須
+
 #### ESLint / 型 / CI テストの修正（recommended 準拠）
 
 - 内部リンク・`goto` に `$app/paths` の `resolve()` を利用（`navItems` は `as const` でルート型に一致）。クエリ付き `goto` はルール上アンマッチのため当該箇所のみ `eslint-disable-next-line`
