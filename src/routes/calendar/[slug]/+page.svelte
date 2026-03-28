@@ -127,104 +127,102 @@
 	</div>
 
 	<h2 class="mb-3 text-lg font-semibold text-kaiko-text">参加者 ({data.attendees.length}人)</h2>
-	<div class="space-y-2">
-		{#each sortedAttendees as attendee (attendee.userId)}
-			{@const isSelf = data.userId && attendee.userId === data.userId}
-			{@const isConnection = !isSelf && data.connectionUserIds.includes(attendee.userId)}
-			{@const common = commonCount(attendee.pastContests)}
-			{@const rowClass =
-				'flex items-center gap-3 rounded-lg border border-kaiko-border bg-kaiko-surface px-4 py-3 transition-colors hover:bg-kaiko-surface-alt'}
-			{#snippet attendeeRowInner()}
-				{#if attendee.avatarUrl}
-					<img src={attendee.avatarUrl} alt="" class="h-8 w-8 shrink-0 rounded-full object-cover" />
-				{:else}
-					<div
-						class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-kaiko-accent text-sm font-bold text-white"
-					>
-						{attendee.nickname?.[0] ?? '?'}
-					</div>
-				{/if}
-				<div class="min-w-0 flex-1">
-					<p class="truncate font-medium text-kaiko-text">{attendee.nickname ?? '不明'}</p>
-					<p class="truncate text-xs text-kaiko-muted">{attendee.schoolName ?? ''}</p>
-				</div>
-				<div class="flex shrink-0 gap-1">
-					{#if isSelf}
-						<span
-							class="rounded-full bg-kaiko-accent-muted px-2 py-0.5 text-xs text-kaiko-accent-dark"
-							>自分</span
-						>
-					{:else}
-						{#if common > 0}
-							<span class="rounded-full bg-amber-100 px-2 py-0.5 text-xs text-amber-800"
-								>共通{common}</span
-							>
-						{/if}
-						{#if isConnection}
-							<span class="rounded-full bg-emerald-100 px-2 py-0.5 text-xs text-emerald-800"
-								>繋がり</span
-							>
-						{/if}
-					{/if}
-				</div>
-			{/snippet}
-			{#if isSelf}
-				<a href={resolve('/account')} class={rowClass}>{@render attendeeRowInner()}</a>
-			{:else}
-				<a href={resolve('/profile/[userId]', { userId: attendee.userId })} class={rowClass}
-					>{@render attendeeRowInner()}</a
-				>
-			{/if}
-		{/each}
-	</div>
 
 	{#if data.isOrganizer}
-		<div class="mt-8">
-			<h2 class="mb-3 text-lg font-semibold text-kaiko-text">参加者ダッシュボード (主催者用)</h2>
-			{#if data.attendees.length === 0}
-				<p class="text-sm text-kaiko-muted">まだ参加者はいません</p>
-			{:else}
-				<div class="overflow-hidden rounded-xl border border-kaiko-border">
-					<table class="w-full text-sm">
-						<thead class="bg-kaiko-surface-alt">
-							<tr>
-								<th class="px-4 py-3 text-left font-medium text-kaiko-muted">ニックネーム</th>
-								<th class="px-4 py-3 text-left font-medium text-kaiko-muted">所属</th>
+		{#if data.attendees.length === 0}
+			<p class="text-sm text-kaiko-muted">まだ参加者はいません</p>
+		{:else}
+			<div class="overflow-hidden rounded-xl border border-kaiko-border">
+				<table class="w-full text-sm">
+					<thead class="bg-kaiko-surface-alt">
+						<tr>
+							<th class="px-4 py-3 text-left font-medium text-kaiko-muted">ニックネーム</th>
+							<th class="px-4 py-3 text-left font-medium text-kaiko-muted">所属</th>
+						</tr>
+					</thead>
+					<tbody>
+						{#each sortedAttendees as attendee (attendee.userId)}
+							<tr class="border-t border-kaiko-border hover:bg-kaiko-surface-alt">
+								<td class="px-4 py-3">
+									<a
+										href={attendee.userId === data.userId
+											? resolve('/account')
+											: resolve('/profile/[userId]', { userId: attendee.userId })}
+										class="flex items-center gap-2 text-kaiko-accent hover:underline"
+									>
+										{#if attendee.avatarUrl}
+											<img
+												src={attendee.avatarUrl}
+												alt=""
+												class="h-6 w-6 shrink-0 rounded-full object-cover"
+											/>
+										{:else}
+											<div
+												class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-kaiko-accent text-xs font-bold text-white"
+											>
+												{attendee.nickname?.[0] ?? '?'}
+											</div>
+										{/if}
+										<span class="truncate">{attendee.nickname ?? '不明'}</span>
+									</a>
+								</td>
+								<td class="px-4 py-3 text-kaiko-muted">{attendee.schoolName ?? '—'}</td>
 							</tr>
-						</thead>
-						<tbody>
-							{#each sortedAttendees as attendee (attendee.userId)}
-								<tr class="border-t border-kaiko-border hover:bg-kaiko-surface-alt">
-									<td class="px-4 py-3">
-										<a
-											href={attendee.userId === data.userId
-												? resolve('/account')
-												: resolve('/profile/[userId]', { userId: attendee.userId })}
-											class="flex items-center gap-2 text-kaiko-accent hover:underline"
-										>
-											{#if attendee.avatarUrl}
-												<img
-													src={attendee.avatarUrl}
-													alt=""
-													class="h-6 w-6 shrink-0 rounded-full object-cover"
-												/>
-											{:else}
-												<div
-													class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-kaiko-accent text-xs font-bold text-white"
-												>
-													{attendee.nickname?.[0] ?? '?'}
-												</div>
-											{/if}
-											<span class="truncate">{attendee.nickname ?? '不明'}</span>
-										</a>
-									</td>
-									<td class="px-4 py-3 text-kaiko-muted">{attendee.schoolName ?? '—'}</td>
-								</tr>
-							{/each}
-						</tbody>
-					</table>
-				</div>
-			{/if}
+						{/each}
+					</tbody>
+				</table>
+			</div>
+		{/if}
+	{:else}
+		<div class="space-y-2">
+			{#each sortedAttendees as attendee (attendee.userId)}
+				{@const isSelf = data.userId && attendee.userId === data.userId}
+				{@const isConnection = !isSelf && data.connectionUserIds.includes(attendee.userId)}
+				{@const common = commonCount(attendee.pastContests)}
+				{@const rowClass =
+					'flex items-center gap-3 rounded-lg border border-kaiko-border bg-kaiko-surface px-4 py-3 transition-colors hover:bg-kaiko-surface-alt'}
+				{#snippet attendeeRowInner()}
+					{#if attendee.avatarUrl}
+						<img src={attendee.avatarUrl} alt="" class="h-8 w-8 shrink-0 rounded-full object-cover" />
+					{:else}
+						<div
+							class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-kaiko-accent text-sm font-bold text-white"
+						>
+							{attendee.nickname?.[0] ?? '?'}
+						</div>
+					{/if}
+					<div class="min-w-0 flex-1">
+						<p class="truncate font-medium text-kaiko-text">{attendee.nickname ?? '不明'}</p>
+						<p class="truncate text-xs text-kaiko-muted">{attendee.schoolName ?? ''}</p>
+					</div>
+					<div class="flex shrink-0 gap-1">
+						{#if isSelf}
+							<span
+								class="rounded-full bg-kaiko-accent-muted px-2 py-0.5 text-xs text-kaiko-accent-dark"
+								>自分</span
+							>
+						{:else}
+							{#if common > 0}
+								<span class="rounded-full bg-amber-100 px-2 py-0.5 text-xs text-amber-800"
+									>共通{common}</span
+								>
+							{/if}
+							{#if isConnection}
+								<span class="rounded-full bg-emerald-100 px-2 py-0.5 text-xs text-emerald-800"
+									>繋がり</span
+								>
+							{/if}
+						{/if}
+					</div>
+				{/snippet}
+				{#if isSelf}
+					<a href={resolve('/account')} class={rowClass}>{@render attendeeRowInner()}</a>
+				{:else}
+					<a href={resolve('/profile/[userId]', { userId: attendee.userId })} class={rowClass}
+						>{@render attendeeRowInner()}</a
+					>
+				{/if}
+			{/each}
 		</div>
 	{/if}
 </div>
