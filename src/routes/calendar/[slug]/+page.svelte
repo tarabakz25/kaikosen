@@ -4,6 +4,13 @@
 	import { parseUtc } from '$lib/date';
 
 	type FellowAttendee = { userId: string; nickname: string | null; avatarUrl: string | null };
+	type ConnectionAttendee = {
+		userId: string;
+		nickname: string | null;
+		schoolName: string | null;
+		role: string | null;
+		avatarUrl: string | null;
+	};
 
 	let { data } = $props();
 	let isAttending = $state(data.isAttending);
@@ -11,6 +18,63 @@
 	let showThankYouPopup = $state(false);
 	let fellowAttendees = $state<FellowAttendee[]>([]);
 	let fellowLoading = $state(false);
+
+	let selectedConnectionAttendee = $state<ConnectionAttendee | null>(null);
+	let connectionDetails = $state<{
+		connectedAt: string | null;
+		alias: string | null;
+		sharedEvents: Array<{
+			id: string;
+			title: string;
+			startAt: string;
+			endAt: string | null;
+			location: string | null;
+		}>;
+	} | null>(null);
+	let connectionDetailsLoading = $state(false);
+
+	$effect(() => {
+		const attendee = selectedConnectionAttendee;
+		if (!attendee) {
+			connectionDetails = null;
+			return;
+		}
+		connectionDetailsLoading = true;
+		fetch(`/api/connections/${attendee.userId}/details`)
+			.then((r) => r.json())
+			.then((d) => {
+				if (selectedConnectionAttendee?.userId === attendee.userId) {
+					connectionDetails = d;
+					connectionDetailsLoading = false;
+				}
+			})
+			.catch(() => {
+				if (selectedConnectionAttendee?.userId === attendee.userId) {
+					connectionDetails = null;
+					connectionDetailsLoading = false;
+				}
+			});
+	});
+
+	function formatConnectionDate(d: Date | string | null) {
+		if (!d) return '';
+		return parseUtc(d).toLocaleDateString('ja-JP', {
+			month: 'short',
+			day: 'numeric',
+			weekday: 'short',
+			hour: '2-digit',
+			minute: '2-digit'
+		});
+	}
+
+	function formatEventDate(d: Date | string | null) {
+		if (!d) return '';
+		return parseUtc(d).toLocaleDateString('ja-JP', {
+			month: 'short',
+			day: 'numeric',
+			weekday: 'short'
+		});
+	}
 
 	const myPastContests = data.userProfile?.pastContests ?? [];
 
@@ -289,6 +353,19 @@
 				{/snippet}
 				{#if isSelf}
 					<a href={resolve('/account')} class={rowClass}>{@render attendeeRowInner()}</a>
+				{:else if isConnection}
+					<button
+						class={rowClass + ' w-full text-left'}
+						onclick={() => {
+							selectedConnectionAttendee = {
+								userId: attendee.userId,
+								nickname: attendee.nickname,
+								schoolName: attendee.schoolName,
+								role: attendee.role,
+								avatarUrl: attendee.avatarUrl
+							};
+						}}
+					>{@render attendeeRowInner()}</button>
 				{:else}
 					<a href={resolve('/profile/[userId]', { userId: attendee.userId })} class={rowClass}
 						>{@render attendeeRowInner()}</a
@@ -298,6 +375,123 @@
 		</div>
 	{/if}
 </div>
+
+{#if selectedConnectionAttendee}
+	<div
+		class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+		onclick={() => (selectedConnectionAttendee = null)}
+		role="dialog"
+		aria-modal="true"
+	>
+		<div
+			class="w-full max-w-lg rounded-2xl border border-kaiko-border bg-kaiko-surface p-6 shadow-xl"
+			onclick={(e) => e.stopPropagation()}
+		>
+			<div class="mb-4 flex items-center gap-4">
+				{#if selectedConnectionAttendee.avatarUrl}
+					<img
+						src={selectedConnectionAttendee.avatarUrl}
+						alt={selectedConnectionAttendee.nickname ?? ''}
+						class="h-14 w-14 rounded-full border-2 border-kaiko-border object-cover"
+					/>
+				{:else}
+					<div
+						class="flex h-14 w-14 items-center justify-center rounded-full bg-kaiko-accent text-xl font-bold text-white"
+					>
+						{selectedConnectionAttendee.nickname?.[0] ?? '?'}
+					</div>
+				{/if}
+				<div>
+					{#if connectionDetails?.alias}
+						<p class="text-sm text-kaiko-muted">「{connectionDetails.alias}」でおなじみ</p>
+					{/if}
+					<h2 class="text-xl font-bold text-kaiko-text">
+						{selectedConnectionAttendee.nickname ?? '不明'}
+					</h2>
+					<p class="text-kaiko-muted">{selectedConnectionAttendee.schoolName ?? ''}</p>
+					<span
+						class="mt-1 inline-block rounded-full px-2 py-0.5 text-xs font-medium {selectedConnectionAttendee.role ===
+						'company'
+							? 'bg-orange-100 text-orange-700'
+							: selectedConnectionAttendee.role === 'alumni'
+								? 'bg-green-100 text-green-700'
+								: 'bg-blue-100 text-blue-700'}"
+					>
+						{selectedConnectionAttendee.role === 'company'
+							? '企業'
+							: selectedConnectionAttendee.role === 'alumni'
+								? '卒業生'
+								: selectedConnectionAttendee.role === 'student'
+									? '高専生'
+									: '—'}
+					</span>
+				</div>
+			</div>
+
+			{#if connectionDetailsLoading}
+				<div class="mb-4 text-sm text-kaiko-muted">読み込み中…</div>
+			{:else if connectionDetails}
+				{@const timelineItems = (() => {
+					const list: Array<{
+						type: 'connection' | 'event';
+						date: string;
+						label?: string;
+						event?: { id: string; title: string; startAt: string; location: string | null };
+					}> = [];
+					if (connectionDetails.connectedAt) {
+						list.push({
+							type: 'connection',
+							date: connectionDetails.connectedAt,
+							label: '繋がった日'
+						});
+					}
+					for (const ev of connectionDetails.sharedEvents) {
+						list.push({ type: 'event', date: ev.startAt, event: ev });
+					}
+					return list.sort((a, b) => parseUtc(a.date).getTime() - parseUtc(b.date).getTime());
+				})()}
+				{#if timelineItems.length > 0}
+					<div class="mb-4 space-y-3">
+						<h3 class="text-sm font-semibold text-kaiko-text">つながりの履歴</h3>
+						<ul class="space-y-2">
+							{#each timelineItems as item (`${item.type}-${item.date}-${item.event?.id ?? ''}`)}
+								<li class="flex items-start gap-3 text-sm">
+									<span class="shrink-0 text-kaiko-muted">
+										{item.type === 'connection'
+											? formatConnectionDate(item.date)
+											: formatEventDate(item.date)}
+									</span>
+									{#if item.type === 'connection'}
+										<span class="text-kaiko-text">🔗 {item.label}</span>
+									{:else if item.event}
+										<span class="flex flex-col gap-0.5">
+											<a
+												href={resolve('/calendar/[slug]', { slug: item.event.id })}
+												class="text-kaiko-accent hover:underline"
+											>
+												{item.event.title}
+											</a>
+											{#if item.event.location}
+												<span class="text-xs text-kaiko-muted">📍 {item.event.location}</span>
+											{/if}
+										</span>
+									{/if}
+								</li>
+							{/each}
+						</ul>
+					</div>
+				{/if}
+			{/if}
+
+			<button
+				onclick={() => (selectedConnectionAttendee = null)}
+				class="mt-4 w-full rounded-xl border border-kaiko-border py-3 text-kaiko-muted transition-colors hover:bg-kaiko-surface-alt hover:text-kaiko-text"
+			>
+				閉じる
+			</button>
+		</div>
+	</div>
+{/if}
 
 {#if showThankYouPopup}
 	<div
