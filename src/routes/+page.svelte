@@ -60,6 +60,12 @@
 		return v || fallback;
 	}
 
+	function roleColor(role: string): string {
+		if (role === 'company') return '#f97316';
+		if (role === 'alumni') return '#22c55e';
+		return '#3b82f6';
+	}
+
 	function flameFilter(count: number): string | null {
 		if (count >= 6) return 'url(#flame-3)';
 		if (count >= 3) return 'url(#flame-2)';
@@ -252,6 +258,15 @@
 					.style('pointer-events', 'none')
 					.text(d.nickname[0]);
 			}
+			// ロールカラードット (右下)
+			el.append('circle')
+				.attr('cx', 13)
+				.attr('cy', 13)
+				.attr('r', 5)
+				.attr('fill', roleColor(d.role))
+				.attr('stroke', '#fff')
+				.attr('stroke-width', 1.5)
+				.style('pointer-events', 'none');
 		});
 
 		const label = g
@@ -342,6 +357,9 @@
 					{/if}
 					<h2 class="text-xl font-bold text-kaiko-text">{selectedNode.nickname}</h2>
 					<p class="text-kaiko-muted">{selectedNode.schoolName}</p>
+					<span class="mt-1 inline-block rounded-full px-2 py-0.5 text-xs font-medium {selectedNode.role === 'company' ? 'bg-orange-100 text-orange-700' : selectedNode.role === 'alumni' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}">
+						{selectedNode.role === 'company' ? '企業' : selectedNode.role === 'alumni' ? '卒業生' : '高専生'}
+					</span>
 				</div>
 			</div>
 

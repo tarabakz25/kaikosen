@@ -18,6 +18,7 @@ export const GET: RequestHandler = async ({ locals }) => {
 		id: p.userId,
 		nickname: p.nickname,
 		schoolName: p.schoolName,
+		role: p.role,
 		tags: p.tags,
 		avatarUrl: p.avatarUrl,
 		message: p.message
