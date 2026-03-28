@@ -10,7 +10,19 @@
 	const maxYear = 2025;
 	const years = Array.from({ length: maxYear - 1960 + 1 }, (_, i) => maxYear - i);
 
+	type Role = 'student' | 'alumni' | 'company';
+
+	const roleLabels: Record<
+		Role,
+		{ label: string; schoolLabel: string; schoolPlaceholder: string }
+	> = {
+		student: { label: '現役高専生', schoolLabel: '高専名', schoolPlaceholder: '例: 東京高専' },
+		alumni: { label: '高専OB', schoolLabel: '元高専名', schoolPlaceholder: '例: 東京高専' },
+		company: { label: '企業', schoolLabel: '企業名', schoolPlaceholder: '例: 株式会社〇〇' }
+	};
+
 	let nickname = $state(data.userProfile?.nickname ?? '');
+	let role = $state<Role>((data.userProfile?.role as Role) ?? 'student');
 	let schoolName = $state(data.userProfile?.schoolName ?? '');
 	let tagInput = $state('');
 	let tags = $state<string[]>(data.userProfile?.tags ?? []);
@@ -140,6 +152,7 @@
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({
 					nickname,
+					role,
 					schoolName,
 					tags,
 					pastContests,
@@ -195,6 +208,23 @@
 		</div>
 
 		<div>
+			<label class="mb-2 block text-sm font-medium text-kaiko-muted">ロール</label>
+			<div class="grid grid-cols-3 gap-2">
+				{#each Object.entries(roleLabels) as [value, { label }] (value)}
+					<button
+						type="button"
+						onclick={() => (role = value as Role)}
+						class="rounded-lg border py-2.5 text-sm font-medium transition-colors {role === value
+							? 'border-kaiko-accent bg-kaiko-accent text-white'
+							: 'border-kaiko-border bg-kaiko-surface text-kaiko-text hover:bg-kaiko-surface-alt'}"
+					>
+						{label}
+					</button>
+				{/each}
+			</div>
+		</div>
+
+		<div>
 			<label class="mb-1 block text-sm font-medium text-kaiko-muted">ニックネーム</label>
 			<input
 				bind:value={nickname}
@@ -205,11 +235,13 @@
 		</div>
 
 		<div>
-			<label class="mb-1 block text-sm font-medium text-kaiko-muted">高専名</label>
+			<label class="mb-1 block text-sm font-medium text-kaiko-muted"
+				>{roleLabels[role].schoolLabel}</label
+			>
 			<input
 				bind:value={schoolName}
 				type="text"
-				placeholder="例: 東京高専"
+				placeholder={roleLabels[role].schoolPlaceholder}
 				class="w-full rounded-lg border border-kaiko-border bg-kaiko-surface px-4 py-3 text-kaiko-text placeholder-kaiko-muted focus:border-kaiko-accent focus:outline-none"
 			/>
 		</div>

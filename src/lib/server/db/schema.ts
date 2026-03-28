@@ -7,6 +7,9 @@ export const profile = pgTable('profile', {
 		.$defaultFn(() => crypto.randomUUID()),
 	userId: text('user_id').notNull().unique(),
 	nickname: text('nickname').notNull(),
+	role: text('role', { enum: ['student', 'alumni', 'company'] })
+		.notNull()
+		.default('student'),
 	schoolName: text('school_name').notNull(),
 	tags: text('tags')
 		.array()
