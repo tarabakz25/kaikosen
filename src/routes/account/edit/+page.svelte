@@ -12,12 +12,14 @@
 
 	type Role = 'student' | 'alumni' | 'company';
 
-	const roleLabels: Record<Role, { label: string; schoolLabel: string; schoolPlaceholder: string }> =
-		{
-			student: { label: '現役高専生', schoolLabel: '高専名', schoolPlaceholder: '例: 東京高専' },
-			alumni: { label: '高専OB', schoolLabel: '元高専名', schoolPlaceholder: '例: 東京高専' },
-			company: { label: '企業', schoolLabel: '企業名', schoolPlaceholder: '例: 株式会社〇〇' }
-		};
+	const roleLabels: Record<
+		Role,
+		{ label: string; schoolLabel: string; schoolPlaceholder: string }
+	> = {
+		student: { label: '現役高専生', schoolLabel: '高専名', schoolPlaceholder: '例: 東京高専' },
+		alumni: { label: '高専OB', schoolLabel: '元高専名', schoolPlaceholder: '例: 東京高専' },
+		company: { label: '企業', schoolLabel: '企業名', schoolPlaceholder: '例: 株式会社〇〇' }
+	};
 
 	let nickname = $state(data.userProfile?.nickname ?? '');
 	let role = $state<Role>((data.userProfile?.role as Role) ?? 'student');

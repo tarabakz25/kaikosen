@@ -115,7 +115,8 @@
 			<p class="text-xl font-bold text-kaiko-text">{data.userProfile?.nickname ?? '未設定'}</p>
 			{#if data.userProfile?.role}
 				<span
-					class="mt-1 inline-block rounded-full px-3 py-0.5 text-xs font-medium {data.userProfile.role === 'student'
+					class="mt-1 inline-block rounded-full px-3 py-0.5 text-xs font-medium {data.userProfile
+						.role === 'student'
 						? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300'
 						: data.userProfile.role === 'alumni'
 							? 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300'

@@ -2,6 +2,12 @@
 
 ## [Unreleased] - 2026-03-28
 
+### Fixed
+
+#### Supabase クライアント作成エラー（ブラウザ）
+
+- `src/lib/auth-client.ts` / `src/hooks.server.ts`: `process.env.PUBLIC_*` ではクライアントバンドルに値が乗らず URL/Key が `undefined` になり `@supabase/ssr` が throw していた。SvelteKit の `$env/static/public` に切り替え
+
 ### Added
 
 #### ユーザーによるイベント作成機能 (close #8)

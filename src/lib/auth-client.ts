@@ -1,7 +1,7 @@
 import { createBrowserClient } from '@supabase/ssr';
-import { env } from '$env/dynamic/public';
+import { PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY, PUBLIC_SUPABASE_URL } from '$env/static/public';
 
 export const supabase = createBrowserClient(
-	env.PUBLIC_SUPABASE_URL,
-	env.PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY
+	PUBLIC_SUPABASE_URL,
+	PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY
 );
