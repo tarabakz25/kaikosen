@@ -4,6 +4,12 @@
 
 ### Fixed
 
+#### GitHub Actions CI — 環境変数未設定エラー
+
+- `ci-typecheck.yml` / `ci-build.yml` / `ci-test.yml`: `PUBLIC_SUPABASE_URL`・`PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY` が未設定で `$env/static/public` のエクスポートエラーが発生していた
+- 各ワークフローの実行ステップに `env:` ブロックを追加し、GitHub Secrets から参照するよう修正
+- `ci-test.yml` には `DATABASE_URL` も追加
+
 #### Supabase クライアント作成エラー（ブラウザ）
 
 - `src/lib/auth-client.ts` / `src/hooks.server.ts`: `process.env.PUBLIC_*` ではクライアントバンドルに値が乗らず URL/Key が `undefined` になり `@supabase/ssr` が throw していた。SvelteKit の `$env/static/public` に切り替え
