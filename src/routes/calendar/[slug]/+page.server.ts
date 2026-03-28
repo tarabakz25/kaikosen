@@ -75,6 +75,7 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 			userId: eventAttendee.userId,
 			nickname: profile.nickname,
 			schoolName: profile.schoolName,
+			role: profile.role,
 			avatarUrl: profile.avatarUrl,
 			pastContests: profile.pastContests
 		})
