@@ -16,6 +16,14 @@
 - `src/routes/calendar/+page.svelte` / `+page.server.ts`: ログイン済みユーザーに「+ 作成」ボタンを表示
 - `src/routes/calendar/[slug]/+page.server.ts`: `isOrganizer` フラグを返却（作成者判定）
 - `src/routes/calendar/[slug]/+page.svelte`: イベント画像表示・主催者向け参加者ダッシュボード（テーブル形式、プロフィールリンク付き）を追加
+#### ユーザーロールタグ (closes #6)
+
+- `profile` テーブルに `role` カラムを追加（`'student' | 'alumni' | 'company'`、デフォルト `'student'`）
+- プロフィール編集画面にロール選択ボタンを追加（現役高専生 / 高専OB / 企業）
+- ロールに応じて所属フィールドのラベル・プレースホルダーを動的に変更（高専名 / 元高専名 / 企業名）
+- アカウント画面にロールバッジを表示
+
+---
 
 ## [Unreleased] - 2026-03-01
 

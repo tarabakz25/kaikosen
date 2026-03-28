@@ -113,6 +113,21 @@
 		<!-- ニックネーム・高専名 -->
 		<div class="w-full text-center">
 			<p class="text-xl font-bold text-kaiko-text">{data.userProfile?.nickname ?? '未設定'}</p>
+			{#if data.userProfile?.role}
+				<span
+					class="mt-1 inline-block rounded-full px-3 py-0.5 text-xs font-medium {data.userProfile.role === 'student'
+						? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300'
+						: data.userProfile.role === 'alumni'
+							? 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300'
+							: 'bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300'}"
+				>
+					{data.userProfile.role === 'student'
+						? '現役高専生'
+						: data.userProfile.role === 'alumni'
+							? '高専OB'
+							: '企業'}
+				</span>
+			{/if}
 			<p class="mt-1 text-kaiko-muted">{data.userProfile?.schoolName ?? '未設定'}</p>
 		</div>
 
