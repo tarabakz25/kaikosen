@@ -357,8 +357,19 @@
 					{/if}
 					<h2 class="text-xl font-bold text-kaiko-text">{selectedNode.nickname}</h2>
 					<p class="text-kaiko-muted">{selectedNode.schoolName}</p>
-					<span class="mt-1 inline-block rounded-full px-2 py-0.5 text-xs font-medium {selectedNode.role === 'company' ? 'bg-orange-100 text-orange-700' : selectedNode.role === 'alumni' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}">
-						{selectedNode.role === 'company' ? '企業' : selectedNode.role === 'alumni' ? '卒業生' : '高専生'}
+					<span
+						class="mt-1 inline-block rounded-full px-2 py-0.5 text-xs font-medium {selectedNode.role ===
+						'company'
+							? 'bg-orange-100 text-orange-700'
+							: selectedNode.role === 'alumni'
+								? 'bg-green-100 text-green-700'
+								: 'bg-blue-100 text-blue-700'}"
+					>
+						{selectedNode.role === 'company'
+							? '企業'
+							: selectedNode.role === 'alumni'
+								? '卒業生'
+								: '高専生'}
 					</span>
 				</div>
 			</div>

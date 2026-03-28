@@ -167,7 +167,14 @@
 													{attendee.nickname?.[0] ?? '?'}
 												</div>
 											{/if}
-											<span class="absolute right-0 bottom-0 h-2 w-2 rounded-full border border-white {attendee.role === 'company' ? 'bg-orange-500' : attendee.role === 'alumni' ? 'bg-green-500' : 'bg-blue-500'}"></span>
+											<span
+												class="absolute right-0 bottom-0 h-2 w-2 rounded-full border border-white {attendee.role ===
+												'company'
+													? 'bg-orange-500'
+													: attendee.role === 'alumni'
+														? 'bg-green-500'
+														: 'bg-blue-500'}"
+											></span>
 										</div>
 										<span class="truncate">{attendee.nickname ?? '不明'}</span>
 									{/snippet}
@@ -203,11 +210,7 @@
 				{#snippet attendeeRowInner()}
 					<div class="relative shrink-0">
 						{#if attendee.avatarUrl}
-							<img
-								src={attendee.avatarUrl}
-								alt=""
-								class="h-8 w-8 rounded-full object-cover"
-							/>
+							<img src={attendee.avatarUrl} alt="" class="h-8 w-8 rounded-full object-cover" />
 						{:else}
 							<div
 								class="flex h-8 w-8 items-center justify-center rounded-full bg-kaiko-accent text-sm font-bold text-white"
@@ -215,7 +218,14 @@
 								{attendee.nickname?.[0] ?? '?'}
 							</div>
 						{/if}
-						<span class="absolute right-0 bottom-0 h-2.5 w-2.5 rounded-full border border-white {attendee.role === 'company' ? 'bg-orange-500' : attendee.role === 'alumni' ? 'bg-green-500' : 'bg-blue-500'}"></span>
+						<span
+							class="absolute right-0 bottom-0 h-2.5 w-2.5 rounded-full border border-white {attendee.role ===
+							'company'
+								? 'bg-orange-500'
+								: attendee.role === 'alumni'
+									? 'bg-green-500'
+									: 'bg-blue-500'}"
+						></span>
 					</div>
 					<div class="min-w-0 flex-1">
 						<p class="truncate font-medium text-kaiko-text">{attendee.nickname ?? '不明'}</p>
