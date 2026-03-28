@@ -152,12 +152,7 @@
 						{#each sortedAttendees as attendee (attendee.userId)}
 							<tr class="border-t border-kaiko-border hover:bg-kaiko-surface-alt">
 								<td class="px-4 py-3">
-									<a
-										href={attendee.userId === data.userId
-											? resolve('/account')
-											: resolve('/profile/[userId]', { userId: attendee.userId })}
-										class="flex items-center gap-2 text-kaiko-accent hover:underline"
-									>
+									{#snippet dashboardAttendeeInner()}
 										{#if attendee.avatarUrl}
 											<img
 												src={attendee.avatarUrl}
@@ -172,7 +167,20 @@
 											</div>
 										{/if}
 										<span class="truncate">{attendee.nickname ?? '不明'}</span>
-									</a>
+									{/snippet}
+									{#if attendee.userId === data.userId}
+										<a
+											href={resolve('/account')}
+											class="flex items-center gap-2 text-kaiko-accent hover:underline"
+											>{@render dashboardAttendeeInner()}</a
+										>
+									{:else}
+										<a
+											href={resolve('/profile/[userId]', { userId: attendee.userId })}
+											class="flex items-center gap-2 text-kaiko-accent hover:underline"
+											>{@render dashboardAttendeeInner()}</a
+										>
+									{/if}
 								</td>
 								<td class="px-4 py-3 text-kaiko-muted">{attendee.schoolName ?? '—'}</td>
 							</tr>

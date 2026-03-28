@@ -1,5 +1,4 @@
 import { createServerClient } from '@supabase/ssr';
-import { env } from '$env/dynamic/public';
 import type { Handle } from '@sveltejs/kit';
 import { PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY, PUBLIC_SUPABASE_URL } from '$env/static/public';
 

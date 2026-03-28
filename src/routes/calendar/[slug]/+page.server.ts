@@ -13,6 +13,7 @@ const MOCK_EVENTS = [
 		startAt: new Date('2026-03-15T09:00:00'),
 		endAt: new Date('2026-03-16T21:00:00'),
 		location: '東京高専 体育館',
+		imageUrl: null,
 		createdBy: 'system',
 		createdAt: new Date()
 	},
@@ -24,6 +25,7 @@ const MOCK_EVENTS = [
 		startAt: new Date('2026-04-20T10:00:00'),
 		endAt: new Date('2026-04-20T18:00:00'),
 		location: '大阪高専',
+		imageUrl: null,
 		createdBy: 'system',
 		createdAt: new Date()
 	},
@@ -35,6 +37,7 @@ const MOCK_EVENTS = [
 		startAt: new Date('2026-03-08T18:30:00'),
 		endAt: new Date('2026-03-08T21:00:00'),
 		location: 'オンライン (Discord)',
+		imageUrl: null,
 		createdBy: 'system',
 		createdAt: new Date()
 	},
@@ -46,6 +49,7 @@ const MOCK_EVENTS = [
 		startAt: new Date('2026-11-01T09:00:00'),
 		endAt: new Date('2026-11-01T18:00:00'),
 		location: '国技館（東京）',
+		imageUrl: null,
 		createdBy: 'system',
 		createdAt: new Date()
 	}
