@@ -113,6 +113,14 @@
 				詳細ページ ↗
 			</a>
 		{/if}
+		{#if data.isOrganizer}
+			<a
+				href={resolve('/calendar/[slug]/edit', { slug: data.event.id })}
+				class="flex-1 rounded-xl border border-kaiko-border bg-kaiko-surface-alt py-3 text-center font-medium text-kaiko-text transition-colors hover:bg-kaiko-accent-muted"
+			>
+				編集
+			</a>
+		{/if}
 		{#if data.userId}
 			<button
 				onclick={toggleAttend}
