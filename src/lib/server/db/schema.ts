@@ -8,8 +8,14 @@ export const profile = pgTable('profile', {
 	userId: text('user_id').notNull().unique(),
 	nickname: text('nickname').notNull(),
 	schoolName: text('school_name').notNull(),
-	tags: text('tags').array().notNull().default(sql`'{}'::text[]`),
-	pastContests: text('past_contests').array().notNull().default(sql`'{}'::text[]`),
+	tags: text('tags')
+		.array()
+		.notNull()
+		.default(sql`'{}'::text[]`),
+	pastContests: text('past_contests')
+		.array()
+		.notNull()
+		.default(sql`'{}'::text[]`),
 	message: text('message'),
 	avatarUrl: text('avatar_url'),
 	createdAt: timestamp('created_at').notNull().defaultNow(),
@@ -53,4 +59,3 @@ export const eventAttendee = pgTable(
 	},
 	(t) => [primaryKey({ columns: [t.eventId, t.userId] })]
 );
-

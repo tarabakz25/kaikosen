@@ -1,108 +1,113 @@
 <script lang="ts">
-
-  import './layout.css';
-  import favicon from '$lib/assets/favicon.svg';
-  import logo from '$lib/assets/logo.webp';
-  import { page, navigating } from '$app/state';
-  import { onMount, onDestroy } from 'svelte';
-  import { goto } from '$app/navigation';
-  import { Network, Camera, CalendarDays, UserRound } from 'lucide-svelte';
+	import './layout.css';
+	import favicon from '$lib/assets/favicon.svg';
+	import logo from '$lib/assets/logo.webp';
+	import { page, navigating } from '$app/state';
+	import { onMount, onDestroy } from 'svelte';
+	import { goto } from '$app/navigation';
+	import { Network, Camera, CalendarDays, UserRound } from 'lucide-svelte';
 
 	let { children, data } = $props();
 
+	const navItems = [
+		{ href: '/', icon: Network, label: 'つながり' },
+		{ href: '/card', icon: Camera, label: 'カード' },
+		{ href: '/calendar', icon: CalendarDays, label: 'イベント' },
+		{ href: '/account', icon: UserRound, label: 'アカウント' }
+	];
 
-  const navItems = [
-    { href: '/', icon: Network, label: 'つながり' },
-    { href: '/card', icon: Camera, label: 'カード' },
-    { href: '/calendar', icon: CalendarDays, label: 'イベント' },
-    { href: '/account', icon: UserRound, label: 'アカウント' },
-  ];
+	// Global pending connection polling (QRスキャンされた側の自動リダイレクト)
+	let pollIntervalId: ReturnType<typeof setInterval> | null = null;
 
-  // Global pending connection polling (QRスキャンされた側の自動リダイレクト)
-  let pollIntervalId: ReturnType<typeof setInterval> | null = null;
+	function startGlobalPoll() {
+		if (pollIntervalId || !data.user) return;
+		pollIntervalId = setInterval(async () => {
+			if (page.url.pathname.startsWith('/connect') || page.url.pathname.startsWith('/card')) return;
+			const res = await fetch('/api/connections?pending=true');
+			if (!res.ok) return;
+			const body = await res.json();
+			if (body.pending) {
+				stopGlobalPoll();
+				goto(`/connect?uid=${body.pending.targetUserId}`);
+			}
+		}, 2000);
+	}
 
-  function startGlobalPoll() {
-    if (pollIntervalId || !data.user) return;
-    pollIntervalId = setInterval(async () => {
-      if (page.url.pathname.startsWith('/connect') || page.url.pathname.startsWith('/card')) return;
-      const res = await fetch('/api/connections?pending=true');
-      if (!res.ok) return;
-      const body = await res.json();
-      if (body.pending) {
-        stopGlobalPoll();
-        goto(`/connect?uid=${body.pending.targetUserId}`);
-      }
-    }, 2000);
-  }
+	function stopGlobalPoll() {
+		if (pollIntervalId) {
+			clearInterval(pollIntervalId);
+			pollIntervalId = null;
+		}
+	}
 
-  function stopGlobalPoll() {
-    if (pollIntervalId) { clearInterval(pollIntervalId); pollIntervalId = null; }
-  }
+	onDestroy(stopGlobalPoll);
 
-  onDestroy(stopGlobalPoll);
+	onMount(() => {
+		startGlobalPoll();
 
-  onMount(() => {
-     startGlobalPoll();
+		const d = document;
+		const config = {
+			kitId: 'zkw7npd',
+			scriptTimeout: 3000,
+			async: true
+		};
 
-     const d = document;
-     const config = {
-       kitId: 'zkw7npd',
-       scriptTimeout: 3000,
-       async: true,
-     };
+		const h = d.documentElement;
+		const t = setTimeout(() => {
+			h.className = h.className.replace(/\bwf-loading\b/g, '') + ' wf-inactive';
+		}, config.scriptTimeout);
 
-     const h = d.documentElement;
-     const t = setTimeout(() => {
-       h.className = h.className.replace(/\bwf-loading\b/g, '') + ' wf-inactive';
-     }, config.scriptTimeout);
+		const tk = d.createElement('script');
+		const legacyTk = tk as HTMLScriptElement & {
+			onreadystatechange?:
+				| ((this: HTMLScriptElement & { readyState?: string }, ev: Event) => unknown)
+				| null;
+			readyState?: string;
+		};
+		let f = false;
+		const s = d.getElementsByTagName('script')[0];
+		let a: string | undefined;
 
-     const tk = d.createElement('script');
-     const legacyTk = tk as HTMLScriptElement & {
-       onreadystatechange?: ((this: HTMLScriptElement & { readyState?: string }, ev: Event) => unknown) | null;
-       readyState?: string;
-     };
-     let f = false;
-     const s = d.getElementsByTagName('script')[0];
-     let a: string | undefined;
+		h.className += ' wf-loading';
+		tk.src = `https://use.typekit.net/${config.kitId}.js`;
+		tk.async = true;
+		const handleLoad = function (this: HTMLScriptElement & { readyState?: string }) {
+			a = this.readyState;
+			if (f || (a && a !== 'complete' && a !== 'loaded')) return;
+			f = true;
+			clearTimeout(t);
+			try {
+				(window as Window & { Typekit?: { load: (cfg: unknown) => void } }).Typekit?.load(config);
+			} catch {
+				// no-op
+			}
+		};
+		tk.addEventListener('load', () => handleLoad.call(legacyTk));
+		legacyTk.onreadystatechange = function () {
+			handleLoad.call(legacyTk);
+		};
 
-     h.className += ' wf-loading';
-     tk.src = `https://use.typekit.net/${config.kitId}.js`;
-     tk.async = true;
-     const handleLoad = function (this: HTMLScriptElement & { readyState?: string }) {
-       a = this.readyState;
-       if (f || (a && a !== 'complete' && a !== 'loaded')) return;
-       f = true;
-       clearTimeout(t);
-       try {
-         (window as Window & { Typekit?: { load: (cfg: unknown) => void } }).Typekit?.load(config);
-       } catch {
-         // no-op
-       }
-     };
-     tk.addEventListener('load', () => handleLoad.call(legacyTk));
-     legacyTk.onreadystatechange = function () {
-       handleLoad.call(legacyTk);
-     };
-
-     s.parentNode?.insertBefore(tk, s);
-   });
+		s.parentNode?.insertBefore(tk, s);
+	});
 </script>
 
 <svelte:head><link rel="icon" href={favicon} /></svelte:head>
 
 {#if navigating.to}
-  <div class="fixed inset-0 z-[100] flex items-center justify-center bg-kaiko-bg/60 backdrop-blur-sm pointer-events-none">
-    <div class="landolt-ring"></div>
-  </div>
+	<div
+		class="pointer-events-none fixed inset-0 z-[100] flex items-center justify-center bg-kaiko-bg/60 backdrop-blur-sm"
+	>
+		<div class="landolt-ring"></div>
+	</div>
 {/if}
 
-<div class="h-screen overflow-y-auto bg-kaiko-bg text-kaiko-text pb-16">
-  {#if data.user}
-  <header class="sticky top-0 z-40 bg-kaiko-bg px-4 py-2">
-    <img src={logo} alt="kaikosen" class="h-8 object-contain" />
-  </header>
-  {/if}
-  {@render children()}
+<div class="h-screen overflow-y-auto bg-kaiko-bg pb-16 text-kaiko-text">
+	{#if data.user}
+		<header class="sticky top-0 z-40 bg-kaiko-bg px-4 py-2">
+			<img src={logo} alt="kaikosen" class="h-8 object-contain" />
+		</header>
+	{/if}
+	{@render children()}
 </div>
 
 {#if data.user}
@@ -135,16 +140,18 @@
 {/if}
 
 <style>
-  .landolt-ring {
-    width: 44px;
-    height: 44px;
-    border-radius: 50%;
-    border: 5px solid var(--color-kaiko-accent);
-    border-right-color: transparent;
-    animation: landolt-spin 0.75s linear infinite;
-  }
+	.landolt-ring {
+		width: 44px;
+		height: 44px;
+		border-radius: 50%;
+		border: 5px solid var(--color-kaiko-accent);
+		border-right-color: transparent;
+		animation: landolt-spin 0.75s linear infinite;
+	}
 
-  @keyframes landolt-spin {
-    to { transform: rotate(360deg); }
-  }
+	@keyframes landolt-spin {
+		to {
+			transform: rotate(360deg);
+		}
+	}
 </style>

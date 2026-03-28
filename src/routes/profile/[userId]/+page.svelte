@@ -45,8 +45,16 @@
 			});
 		}
 		items.sort((a, b) => {
-			const dateA = a.date ? parseUtc(a.date).getTime() : (a.year ? new Date(`${a.year}-01-01`).getTime() : 0);
-			const dateB = b.date ? parseUtc(b.date).getTime() : (b.year ? new Date(`${b.year}-01-01`).getTime() : 0);
+			const dateA = a.date
+				? parseUtc(a.date).getTime()
+				: a.year
+					? new Date(`${a.year}-01-01`).getTime()
+					: 0;
+			const dateB = b.date
+				? parseUtc(b.date).getTime()
+				: b.year
+					? new Date(`${b.year}-01-01`).getTime()
+					: 0;
 			return dateB - dateA;
 		});
 		return items;

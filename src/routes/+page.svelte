@@ -31,7 +31,13 @@
 	let currentUserId = $state<string | null>(null);
 	let connectionDetails = $state<{
 		connectedAt: string | null;
-		sharedEvents: Array<{ id: string; title: string; startAt: string; endAt: string | null; location: string | null }>;
+		sharedEvents: Array<{
+			id: string;
+			title: string;
+			startAt: string;
+			endAt: string | null;
+			location: string | null;
+		}>;
 	} | null>(null);
 
 	function schoolColor(schoolName: string): string {
@@ -345,9 +351,18 @@
 
 			{#if connectionDetails}
 				{@const timelineItems = (() => {
-					const list: Array<{ type: 'connection' | 'event'; date: string; label?: string; event?: { id: string; title: string; startAt: string; location: string | null } }> = [];
+					const list: Array<{
+						type: 'connection' | 'event';
+						date: string;
+						label?: string;
+						event?: { id: string; title: string; startAt: string; location: string | null };
+					}> = [];
 					if (connectionDetails.connectedAt) {
-						list.push({ type: 'connection', date: connectionDetails.connectedAt, label: '繋がった日' });
+						list.push({
+							type: 'connection',
+							date: connectionDetails.connectedAt,
+							label: '繋がった日'
+						});
 					}
 					for (const ev of connectionDetails.sharedEvents) {
 						list.push({ type: 'event', date: ev.startAt, event: ev });
@@ -359,27 +374,28 @@
 						<h3 class="text-sm font-semibold text-kaiko-text">つながりの履歴</h3>
 						<ul class="space-y-2">
 							{#each timelineItems as item}
-							<li class="flex items-start gap-3 text-sm">
-								<span class="shrink-0 text-kaiko-muted">{item.type === 'connection' ? formatConnectionDate(item.date) : formatEventDate(item.date)}</span>
-								{#if item.type === 'connection'}
-									<span class="text-kaiko-text">🔗 {item.label}</span>
-								{:else if item.event}
-									<span class="flex flex-col gap-0.5">
-										<a
-											href="/calendar/{item.event.id}"
-											class="text-kaiko-accent hover:underline"
-										>
-											{item.event.title}
-										</a>
-										{#if item.event.location}
-											<span class="text-kaiko-muted text-xs">📍 {item.event.location}</span>
-										{/if}
-									</span>
-								{/if}
-							</li>
-						{/each}
-					</ul>
-				</div>
+								<li class="flex items-start gap-3 text-sm">
+									<span class="shrink-0 text-kaiko-muted"
+										>{item.type === 'connection'
+											? formatConnectionDate(item.date)
+											: formatEventDate(item.date)}</span
+									>
+									{#if item.type === 'connection'}
+										<span class="text-kaiko-text">🔗 {item.label}</span>
+									{:else if item.event}
+										<span class="flex flex-col gap-0.5">
+											<a href="/calendar/{item.event.id}" class="text-kaiko-accent hover:underline">
+												{item.event.title}
+											</a>
+											{#if item.event.location}
+												<span class="text-xs text-kaiko-muted">📍 {item.event.location}</span>
+											{/if}
+										</span>
+									{/if}
+								</li>
+							{/each}
+						</ul>
+					</div>
 				{/if}
 			{:else if selectedNode}
 				<div class="mb-4 text-sm text-kaiko-muted">読み込み中…</div>

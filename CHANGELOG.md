@@ -5,6 +5,7 @@
 ### Changed
 
 #### コントリビューション手順の更新
+
 - `CONTRIBUTING.md` を kaikosen 現行スタック（SvelteKit、Bun、Vitest 二層、Drizzle、環境変数）に合わせて全面刷新。旧 `kmc-platform` 向けの npm / React 記述を削除
 - `.github/PULL_REQUEST_TEMPLATE.md` のチェックコマンドを `bun` ベースに更新し `test` / `check` を明記
 - `.github/workflows/ci.yml` の型チェックを実在スクリプト `bun run check` に修正。`format-check` ステップは `lint` 内の Prettier チェックと重複のため削除
@@ -12,11 +13,13 @@
 ### Fixed
 
 #### QRスキャンフロー: pending.userId → targetUserId バグ修正・リダイレクト先を `/` に統一
+
 - `src/routes/+layout.svelte`: グローバルpoll の `goto` で `body.pending.userId`（自分のID）を使っていたバグを `body.pending.targetUserId` に修正。また `/card` ページではローカルpollがあるためグローバルpollをスキップするよう条件追加
 - `src/routes/card/+page.svelte`: 二つ名登録成功後（scanned/pending 両方）に scan 再起動していたのを `goto('/')` に変更
 - `src/routes/connect/+page.svelte`: 登録成功後のリダイレクトを `/profile/...` から `/` に変更
 
 #### QRスキャン: 二つ名登録画面が表示されない問題
+
 - `src/routes/connect/+page.server.ts`: プロフィールへのリダイレクトを廃止。`/connect?uid=` で相手プロフィールを取得し二つ名登録用データを返す
 - `src/routes/connect/+page.svelte`: 二つ名入力フォームを表示。登録後は相手プロフィールへ遷移
 - `src/routes/+layout.server.ts`: `/connect` を保護ルートに追加（未ログイン時はログインへ）
@@ -24,9 +27,11 @@
 ### Added
 
 #### ページ遷移: ランドルト環スピナー
+
 - `src/routes/+layout.svelte`: `navigating` ($app/state) を利用し、ページ遷移中に全画面オーバーレイでランドルト環（C字形・accent色）スピナーを表示
 
 #### QRスキャンされた側のグローバル自動リダイレクト
+
 - `src/routes/+layout.svelte`: pending接続ポーリング (2秒間隔) をレイアウトに移動。ログイン中であればどのページにいてもQRスキャンを検知し `/connect?uid=` へリダイレクト
 - `src/routes/card/+page.svelte`: ローカルのpolling実装 (`pollIntervalId`, `startPoll`, `stopPoll`) を削除。レイアウトのグローバルポーリングに一本化
 
@@ -35,53 +40,65 @@
 ### Added
 
 #### UI: ロゴ配置
+
 - `src/routes/login/+page.svelte`: ランディングページ中央に `logo.webp` を表示。`h1` テキストを削除しロゴ画像に置換
 - `src/routes/+layout.svelte`: 認証済みユーザー向けに sticky ヘッダーを追加し左上にロゴを表示
 
 #### グラフ: ノードをGoogle Avatarアイコンに変更
+
 - `src/routes/+page.svelte`: D3ノードを `<circle>` から `<g>` ベースに変更。`avatarUrl` がある場合は SVG `<image>` + `clipPathUnits="objectBoundingBox"` で円形クリップ、ない場合は背景色+頭文字のフォールバック表示。ポップアップアイコンも `<img>` または頭文字に対応
 
 #### グラフ: イベント共通参加回数の炎エフェクト
+
 - `src/lib/types.ts`: `GraphEdge` に `sharedEventCount: number` フィールドを追加
 - `src/routes/api/graph/+server.ts`: 自分が参加したイベントと接続ユーザーの共通参加数を集計し `sharedEventCount` をエッジに付与
 - `src/routes/+page.svelte`: SVG `<defs>` に3段階の橙色グローフィルター (`flame-1/2/3`) を追加。sharedEventCount に応じてノードに適用。ポップアップに `🔥 一緒に参加: N回` を表示
 
 #### QRカード: スキャンされた側のpending自動遷移
+
 - `src/lib/server/db/schema.ts`: `connection` テーブルに `(userId, targetUserId)` の複合 unique インデックスを追加
 - `src/routes/api/connections/+server.ts`: GET に `?pending=true` クエリ対応追加 (alias='' かつ targetUserId=自分 の接続を返す)。POST を upsert に変更 (`onConflictDoUpdate`)
 - `src/routes/card/+page.svelte`: 表示タブ中に2秒間隔で pending ポーリングを実行。pending を検知したら `/connect?uid=` にリダイレクト
 
 #### イベント: 参加ボタン押下時の即時リスト反映
+
 - `src/routes/calendar/[slug]/+page.svelte`: `localAttendees` を `$state` で保持し楽観的更新を実装。参加/取り消し時にリストを即時更新、API失敗時は元に戻す。参加者数表示も `localAttendees.length` に変更
 
 ### Added / Fixed
 
 #### グラフ: ノードクリック時に二つ名を表示
+
 - `src/lib/types.ts`: `GraphEdge` に `alias: string` フィールドを追加
 - `src/routes/api/graph/+server.ts`: エッジに `alias` を含め、`currentUserId` をレスポンスに追加
 - `src/routes/+page.svelte`: `currentUserId`・`graphEdges` を保持し、ノードクリック時に対応エッジから `alias` を取得。ポップアップに「二つ名」として表示
 
 #### つながり機能: 双方向接続の自動作成
+
 - `src/routes/api/connections/+server.ts`: POST 時に A→B を作成後、B→A の逆方向 connection が存在しなければ自動挿入。グラフがスキャンした側・された側の両方に反映される
 
 #### QRカード機能: タブ切替後の再描画修正
+
 - `src/routes/card/+page.svelte`: QR描画を `onMount` から `$effect` に変更。スキャンタブへ切替後に表示タブへ戻ってもキャンバスバインディングが再評価され QR が再描画される
 
 #### イベント機能: 過去コンテスト共通参加者表示
+
 - `src/routes/calendar/[slug]/+page.server.ts`: モックイベント (mock-1〜mock-4) 用に `MOCK_ATTENDEES` を追加。各参加者に `pastContests: string[]` フィールドを持たせ、DB 参加者は `[]` で補完
 - `src/routes/calendar/[slug]/+page.svelte`: 「参加する」クリック時に過去コンテスト選択モーダルを表示 (localStorage に永続化)。共通コンテスト数で参加者をソートし「共通N個」バッジを表示
 
 #### プロフィール: 過去コンテスト参加記録の設定
+
 - `src/lib/server/db/schema.ts`: `profile` テーブルに `pastContests text[]` カラムを追加
 - `src/lib/contests.ts`: `PAST_CONTESTS` 定数を共有モジュールとして切り出し
 - `src/routes/api/profile/+server.ts`: `pastContests` フィールドを受け取って保存
 - `src/routes/account/edit/+page.svelte`: 過去コンテスト選択チェックボックスUI を追加
 
 #### イベント機能: モックユーザー削除・プロフィール連携
+
 - `src/routes/calendar/[slug]/+page.server.ts`: MOCK_ATTENDEES を完全削除。参加者クエリに `pastContests` を追加
 - `src/routes/calendar/[slug]/+page.svelte`: localStorage/モーダルを廃止。自分のプロフィールの `pastContests` を使って共通コンテスト数を計算・ソート・バッジ表示
 
 #### イベント機能: 参加者をDB実データに反映
+
 - `src/routes/calendar/[slug]/+page.server.ts`: mock イベントでも `isAttending` を DB から取得するよう修正。参加者リストも DB の実際の参加者を優先し、未参加のモックユーザーを後続追加する方式に変更
 
 ## [Unreleased] - 2026-02-28

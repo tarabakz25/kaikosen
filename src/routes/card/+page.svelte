@@ -14,7 +14,11 @@
 	let scanLoopId: number | null = null;
 	let pollIntervalId: ReturnType<typeof setInterval> | null = null;
 	let scannedUserId = $state<string | null>(null);
-	let scannedProfile = $state<{ nickname: string; schoolName: string; avatarUrl: string | null } | null>(null);
+	let scannedProfile = $state<{
+		nickname: string;
+		schoolName: string;
+		avatarUrl: string | null;
+	} | null>(null);
 	let scannedAliasInput = $state('');
 	let scannedSubmitting = $state(false);
 	let scanError = $state('');
@@ -77,9 +81,14 @@
 					}).catch(() => {});
 					// 相手のプロフィールを取得
 					fetch(`/api/profile/${uid}`)
-						.then((r) => r.ok ? r.json() : null)
+						.then((r) => (r.ok ? r.json() : null))
 						.then((p) => {
-							if (p) scannedProfile = { nickname: p.nickname, schoolName: p.schoolName, avatarUrl: p.avatarUrl };
+							if (p)
+								scannedProfile = {
+									nickname: p.nickname,
+									schoolName: p.schoolName,
+									avatarUrl: p.avatarUrl
+								};
 						})
 						.catch(() => {});
 					return;
@@ -214,16 +223,31 @@
 </div>
 
 {#if scannedUserId}
-	<div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4" role="dialog" aria-modal="true" aria-labelledby="scanned-alias-title">
-		<div class="w-full max-w-sm rounded-2xl border border-kaiko-border bg-kaiko-surface p-6 shadow-xl">
-			<h2 id="scanned-alias-title" class="mb-2 text-xl font-bold text-kaiko-text">QRコードをスキャンしました</h2>
+	<div
+		class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4"
+		role="dialog"
+		aria-modal="true"
+		aria-labelledby="scanned-alias-title"
+	>
+		<div
+			class="w-full max-w-sm rounded-2xl border border-kaiko-border bg-kaiko-surface p-6 shadow-xl"
+		>
+			<h2 id="scanned-alias-title" class="mb-2 text-xl font-bold text-kaiko-text">
+				QRコードをスキャンしました
+			</h2>
 			<p class="mb-4 text-sm text-kaiko-muted">この人に二つ名（あだ名）をつけてください</p>
 			{#if scannedProfile}
 				<div class="mb-4 flex items-center gap-3 rounded-lg bg-kaiko-surface-alt p-3">
 					{#if scannedProfile.avatarUrl}
-						<img src={scannedProfile.avatarUrl} alt="" class="h-12 w-12 rounded-full object-cover" />
+						<img
+							src={scannedProfile.avatarUrl}
+							alt=""
+							class="h-12 w-12 rounded-full object-cover"
+						/>
 					{:else}
-						<div class="flex h-12 w-12 items-center justify-center rounded-full bg-kaiko-accent text-lg font-bold text-white">
+						<div
+							class="flex h-12 w-12 items-center justify-center rounded-full bg-kaiko-accent text-lg font-bold text-white"
+						>
 							{scannedProfile.nickname?.[0] ?? '?'}
 						</div>
 					{/if}

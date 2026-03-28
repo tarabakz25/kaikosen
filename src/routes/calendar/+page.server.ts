@@ -13,7 +13,10 @@ export const load: PageServerLoad = async ({ locals }) => {
 
 	const countMap = Object.fromEntries(attendeeCounts.map((r) => [r.eventId, r.count]));
 
-	let connectedAttendeesByEvent: Record<string, Array<{ userId: string; nickname: string; avatarUrl: string | null }>> = {};
+	let connectedAttendeesByEvent: Record<
+		string,
+		Array<{ userId: string; nickname: string; avatarUrl: string | null }>
+	> = {};
 	if (locals.user) {
 		const conns = await db
 			.select({ targetUserId: connection.targetUserId })
