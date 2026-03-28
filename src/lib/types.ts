@@ -32,6 +32,7 @@ export type GraphNode = {
 	id: string;
 	nickname: string;
 	schoolName: string;
+	role: 'student' | 'alumni' | 'company';
 	tags: string[];
 	avatarUrl: string | null;
 	message?: string | null;

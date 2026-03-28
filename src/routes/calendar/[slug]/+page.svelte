@@ -14,6 +14,12 @@
 
 	const myPastContests = data.userProfile?.pastContests ?? [];
 
+	function avatarColor(str: string): string {
+		let hash = 0;
+		for (const c of str) hash = (hash * 31 + c.charCodeAt(0)) & 0xffffffff;
+		return `hsl(${Math.abs(hash) % 360}, 65%, 55%)`;
+	}
+
 	function formatDate(d: Date | string | null) {
 		if (!d) return '';
 		return parseUtc(d).toLocaleDateString('ja-JP', {
@@ -86,7 +92,27 @@
 		/>
 	{/if}
 
-	<h1 class="mb-2 text-2xl font-bold text-kaiko-text">{data.event.title}</h1>
+	<h1 class="mb-1 text-2xl font-bold text-kaiko-text">{data.event.title}</h1>
+
+	{#if data.organizerProfile}
+		<div class="mb-3 flex items-center gap-2">
+			{#if data.organizerProfile.avatarUrl}
+				<img
+					src={data.organizerProfile.avatarUrl}
+					alt={data.organizerProfile.nickname}
+					class="h-7 w-7 rounded-full object-cover"
+				/>
+			{:else}
+				<div
+					class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white"
+					style="background-color: {avatarColor(data.organizerProfile.nickname)}"
+				>
+					{data.organizerProfile.nickname[0]}
+				</div>
+			{/if}
+			<span class="text-sm text-kaiko-muted">{data.organizerProfile.nickname}</span>
+		</div>
+	{/if}
 
 	<div class="mb-4 space-y-1">
 		<p class="text-kaiko-text">🗓 {formatDate(data.event.startAt)}</p>
@@ -94,7 +120,17 @@
 			<p class="text-sm text-kaiko-muted">〜 {formatDate(data.event.endAt)}</p>
 		{/if}
 		{#if data.event.location}
-			<p class="text-kaiko-text">📍 {data.event.location}</p>
+			<p class="text-kaiko-text">
+				📍
+				<a
+					href="https://www.google.com/maps/search/?api=1&query={encodeURIComponent(
+						data.event.location
+					)}"
+					target="_blank"
+					rel="noopener external"
+					class="underline hover:text-kaiko-accent">{data.event.location}</a
+				>
+			</p>
 		{/if}
 	</div>
 
@@ -153,19 +189,29 @@
 							<tr class="border-t border-kaiko-border hover:bg-kaiko-surface-alt">
 								<td class="px-4 py-3">
 									{#snippet dashboardAttendeeInner()}
-										{#if attendee.avatarUrl}
-											<img
-												src={attendee.avatarUrl}
-												alt=""
-												class="h-6 w-6 shrink-0 rounded-full object-cover"
-											/>
-										{:else}
-											<div
-												class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-kaiko-accent text-xs font-bold text-white"
-											>
-												{attendee.nickname?.[0] ?? '?'}
-											</div>
-										{/if}
+										<div class="relative shrink-0">
+											{#if attendee.avatarUrl}
+												<img
+													src={attendee.avatarUrl}
+													alt=""
+													class="h-6 w-6 rounded-full object-cover"
+												/>
+											{:else}
+												<div
+													class="flex h-6 w-6 items-center justify-center rounded-full bg-kaiko-accent text-xs font-bold text-white"
+												>
+													{attendee.nickname?.[0] ?? '?'}
+												</div>
+											{/if}
+											<span
+												class="absolute right-0 bottom-0 h-2 w-2 rounded-full border border-white {attendee.role ===
+												'company'
+													? 'bg-orange-500'
+													: attendee.role === 'alumni'
+														? 'bg-green-500'
+														: 'bg-blue-500'}"
+											></span>
+										</div>
 										<span class="truncate">{attendee.nickname ?? '不明'}</span>
 									{/snippet}
 									{#if attendee.userId === data.userId}
@@ -198,19 +244,25 @@
 				{@const rowClass =
 					'flex items-center gap-3 rounded-lg border border-kaiko-border bg-kaiko-surface px-4 py-3 transition-colors hover:bg-kaiko-surface-alt'}
 				{#snippet attendeeRowInner()}
-					{#if attendee.avatarUrl}
-						<img
-							src={attendee.avatarUrl}
-							alt=""
-							class="h-8 w-8 shrink-0 rounded-full object-cover"
-						/>
-					{:else}
-						<div
-							class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-kaiko-accent text-sm font-bold text-white"
-						>
-							{attendee.nickname?.[0] ?? '?'}
-						</div>
-					{/if}
+					<div class="relative shrink-0">
+						{#if attendee.avatarUrl}
+							<img src={attendee.avatarUrl} alt="" class="h-8 w-8 rounded-full object-cover" />
+						{:else}
+							<div
+								class="flex h-8 w-8 items-center justify-center rounded-full bg-kaiko-accent text-sm font-bold text-white"
+							>
+								{attendee.nickname?.[0] ?? '?'}
+							</div>
+						{/if}
+						<span
+							class="absolute right-0 bottom-0 h-2.5 w-2.5 rounded-full border border-white {attendee.role ===
+							'company'
+								? 'bg-orange-500'
+								: attendee.role === 'alumni'
+									? 'bg-green-500'
+									: 'bg-blue-500'}"
+						></span>
+					</div>
 					<div class="min-w-0 flex-1">
 						<p class="truncate font-medium text-kaiko-text">{attendee.nickname ?? '不明'}</p>
 						<p class="truncate text-xs text-kaiko-muted">{attendee.schoolName ?? ''}</p>

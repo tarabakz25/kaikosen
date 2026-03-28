@@ -16,6 +16,10 @@
 
 ### Added
 
+#### イベント詳細ページの開催場所をGoogle Mapsリンク化 (close #12)
+
+- `src/routes/calendar/[slug]/+page.svelte`: `location` が設定されている場合、テキストをクリックするとGoogle Mapsの検索ページに遷移するリンクに変更
+
 #### ユーザーによるイベント作成機能 (close #8)
 
 - `src/lib/server/db/schema.ts`: `event` テーブルに `image_url` カラムを追加
