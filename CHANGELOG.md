@@ -2,6 +2,13 @@
 
 ## [Unreleased] - 2026-03-01
 
+### Changed
+
+#### コントリビューション手順の更新
+- `CONTRIBUTING.md` を kaikosen 現行スタック（SvelteKit、Bun、Vitest 二層、Drizzle、環境変数）に合わせて全面刷新。旧 `kmc-platform` 向けの npm / React 記述を削除
+- `.github/PULL_REQUEST_TEMPLATE.md` のチェックコマンドを `bun` ベースに更新し `test` / `check` を明記
+- `.github/workflows/ci.yml` の型チェックを実在スクリプト `bun run check` に修正。`format-check` ステップは `lint` 内の Prettier チェックと重複のため削除
+
 ### Fixed
 
 #### QRスキャンフロー: pending.userId → targetUserId バグ修正・リダイレクト先を `/` に統一
