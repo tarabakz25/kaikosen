@@ -86,7 +86,11 @@
 		/>
 	{/if}
 
-	<h1 class="mb-2 text-2xl font-bold text-kaiko-text">{data.event.title}</h1>
+	<h1 class="mb-1 text-2xl font-bold text-kaiko-text">{data.event.title}</h1>
+
+	{#if data.organizerProfile}
+		<p class="mb-3 text-sm text-kaiko-muted">👤 {data.organizerProfile.nickname}</p>
+	{/if}
 
 	<div class="mb-4 space-y-1">
 		<p class="text-kaiko-text">🗓 {formatDate(data.event.startAt)}</p>
@@ -107,10 +111,6 @@
 			</p>
 		{/if}
 	</div>
-
-	{#if data.organizerProfile}
-		<p class="mb-2 text-sm text-kaiko-muted">👤 主催: {data.organizerProfile.nickname}</p>
-	{/if}
 
 	{#if data.event.description}
 		<p class="mb-4 whitespace-pre-line text-kaiko-text">{data.event.description}</p>
