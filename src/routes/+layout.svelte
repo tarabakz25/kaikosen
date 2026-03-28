@@ -5,6 +5,7 @@
 	import { page, navigating } from '$app/state';
 	import { onMount, onDestroy } from 'svelte';
 	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import { Network, Camera, CalendarDays, UserRound } from 'lucide-svelte';
 
 	let { children, data } = $props();
@@ -14,7 +15,7 @@
 		{ href: '/card', icon: Camera, label: 'カード' },
 		{ href: '/calendar', icon: CalendarDays, label: 'イベント' },
 		{ href: '/account', icon: UserRound, label: 'アカウント' }
-	];
+	] as const;
 
 	// Global pending connection polling (QRスキャンされた側の自動リダイレクト)
 	let pollIntervalId: ReturnType<typeof setInterval> | null = null;
@@ -28,7 +29,8 @@
 			const body = await res.json();
 			if (body.pending) {
 				stopGlobalPoll();
-				goto(`/connect?uid=${body.pending.targetUserId}`);
+				// eslint-disable-next-line svelte/no-navigation-without-resolve -- query string appended to resolved path
+				goto(`${resolve('/connect')}?uid=${body.pending.targetUserId}`);
 			}
 		}, 2000);
 	}
@@ -115,14 +117,15 @@
 		class="fixed right-0 bottom-0 left-0 z-50 border-t border-kaiko-border bg-kaiko-surface shadow-sm"
 	>
 		<div class="mx-auto flex h-16 max-w-lg items-center justify-around px-4">
-			{#each navItems as item}
+			{#each navItems as item (item.href)}
+				{@const resolved = resolve(item.href)}
 				{@const isActive =
-					page.url.pathname === item.href ||
-					(item.href !== '/' && page.url.pathname.startsWith(item.href))}
+					page.url.pathname === resolved ||
+					(item.href !== '/' && page.url.pathname.startsWith(resolved))}
 				{@const isAccount = item.href === '/account'}
 				{@const avatarUrl = data.userProfile?.avatarUrl ?? data.user?.image}
 				<a
-					href={item.href}
+					href={resolved}
 					class="flex flex-col items-center gap-0.5 rounded-lg px-3 py-2 transition-colors {isActive
 						? 'text-kaiko-accent'
 						: 'text-kaiko-muted hover:text-kaiko-text'}"

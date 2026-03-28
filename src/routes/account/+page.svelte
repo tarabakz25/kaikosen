@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import { supabase } from '$lib/auth-client';
 	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import { getTheme, setTheme } from '$lib/theme';
 	import { PAST_CONTESTS_TITLE } from '$lib/contests';
 	import { parseUtc } from '$lib/date';
@@ -72,7 +73,7 @@
 
 	async function signOut() {
 		await supabase.auth.signOut();
-		goto('/login');
+		goto(resolve('/login'));
 	}
 
 	function onAvatarError(e: Event) {
@@ -118,7 +119,7 @@
 		<!-- タグ -->
 		{#if (data.userProfile?.tags ?? []).length > 0}
 			<div class="flex flex-wrap justify-center gap-1.5">
-				{#each data.userProfile?.tags ?? [] as tag}
+				{#each data.userProfile?.tags ?? [] as tag (tag)}
 					<span class="rounded-full bg-kaiko-accent-muted px-3 py-1 text-sm text-kaiko-accent-dark"
 						>#{tag}</span
 					>
@@ -137,11 +138,11 @@
 			<div class="w-full">
 				<h2 class="mb-2 text-sm font-medium text-kaiko-muted">参加したイベント・コンテスト</h2>
 				<ul class="space-y-1.5">
-					{#each participationList as item}
+					{#each participationList as item (`${item.type}-${item.eventId ?? item.label}-${item.year ?? ''}`)}
 						<li>
 							{#if item.type === 'event' && item.eventId}
 								<a
-									href="/calendar/{item.eventId}"
+									href={resolve('/calendar/[slug]', { slug: item.eventId })}
 									class="block rounded-lg border border-kaiko-border bg-kaiko-surface px-3 py-2 text-sm text-kaiko-text transition-colors hover:bg-kaiko-surface-alt"
 								>
 									<span class="font-medium">{item.label}</span>
@@ -168,7 +169,7 @@
 		<!-- アクション -->
 		<div class="mt-4 w-full space-y-3">
 			<a
-				href="/account/edit"
+				href={resolve('/account/edit')}
 				class="block w-full rounded-xl bg-kaiko-accent py-3 text-center font-semibold text-white transition-colors hover:bg-kaiko-accent-hover"
 			>
 				プロフィールを編集

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	import { parseUtc } from '$lib/date';
 
 	let { data } = $props();
@@ -27,9 +28,9 @@
 		<p class="py-12 text-center text-kaiko-muted">イベントはまだありません</p>
 	{:else}
 		<div class="space-y-3">
-			{#each data.events as ev}
+			{#each data.events as ev (ev.id)}
 				<a
-					href="/calendar/{ev.id}"
+					href={resolve('/calendar/[slug]', { slug: ev.id })}
 					class="block rounded-xl border border-kaiko-border bg-kaiko-surface p-4 transition-colors hover:bg-kaiko-surface-alt"
 				>
 					<div class="flex items-start justify-between gap-2">
@@ -51,7 +52,7 @@
 						<div class="mt-2 flex items-center gap-2">
 							<span class="text-xs text-kaiko-muted">参戦中</span>
 							<div class="flex -space-x-2">
-								{#each ev.connectedAttendees as attendee}
+								{#each ev.connectedAttendees as attendee (attendee.userId)}
 									{#if attendee.avatarUrl}
 										<img
 											src={attendee.avatarUrl}

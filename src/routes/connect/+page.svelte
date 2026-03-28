@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 
 	let { data } = $props();
 
@@ -16,7 +17,7 @@
 		});
 		submitting = false;
 		if (res.ok) {
-			goto('/');
+			goto(resolve('/'));
 		}
 	}
 </script>
@@ -59,7 +60,7 @@
 		/>
 		<div class="flex gap-3">
 			<a
-				href="/card"
+				href={resolve('/card')}
 				class="flex-1 rounded-xl border border-kaiko-border py-3 text-center text-kaiko-muted transition-colors hover:text-kaiko-text"
 			>
 				キャンセル

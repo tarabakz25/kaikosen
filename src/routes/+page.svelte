@@ -1,8 +1,16 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import * as d3 from 'd3';
+	import type { SimulationLinkDatum, SimulationNodeDatum } from 'd3';
+	import { resolve } from '$app/paths';
 	import { parseUtc } from '$lib/date';
 	import type { GraphNode, GraphEdge } from '$lib/types';
+
+	type GraphSimNode = GraphNode & SimulationNodeDatum;
+	type GraphSimLink = SimulationLinkDatum<GraphSimNode> & {
+		alias: string;
+		sharedEventCount: number;
+	};
 
 	let { data } = $props();
 
@@ -27,8 +35,6 @@
 	let svgEl: SVGSVGElement;
 	let selectedNode = $state<GraphNode | null>(null);
 	let selectedAlias = $state<string | null>(null);
-	let selectedSharedCount = $state(0);
-	let currentUserId = $state<string | null>(null);
 	let connectionDetails = $state<{
 		connectedAt: string | null;
 		sharedEvents: Array<{
@@ -86,8 +92,6 @@
 			edges,
 			currentUserId: uid
 		}: { nodes: GraphNode[]; edges: GraphEdge[]; currentUserId: string } = await res.json();
-		currentUserId = uid;
-
 		if (nodes.length === 0) return;
 
 		// sharedEventCountのルックアップマップ (D3がedges変換する前に構築)
@@ -159,13 +163,20 @@
 				.on('zoom', (e) => g.attr('transform', e.transform.toString()))
 		);
 
+		const simLinks: GraphSimLink[] = edges.map((e) => ({
+			source: e.source,
+			target: e.target,
+			alias: e.alias,
+			sharedEventCount: e.sharedEventCount
+		}));
+
 		const sim = d3
-			.forceSimulation(nodes as any)
+			.forceSimulation(nodes as GraphSimNode[])
 			.force(
 				'link',
 				d3
-					.forceLink(edges as any)
-					.id((d: any) => d.id)
+					.forceLink(simLinks)
+					.id((d) => (d as GraphSimNode).id)
 					.distance(80)
 			)
 			.force('charge', d3.forceManyBody().strength(-200))
@@ -178,7 +189,7 @@
 		const link = g
 			.append('g')
 			.selectAll('line')
-			.data(edges)
+			.data(simLinks)
 			.enter()
 			.append('line')
 			.attr('stroke', linkColor)
@@ -187,20 +198,17 @@
 		// ノードをgroupとして作成
 		const node = g
 			.append('g')
-			.selectAll<SVGGElement, GraphNode>('g')
-			.data(nodes)
+			.selectAll<SVGGElement, GraphSimNode>('g')
+			.data(nodes as GraphSimNode[])
 			.enter()
 			.append('g')
 			.style('cursor', 'pointer')
 			.on('click', (_, d) => {
 				selectedNode = d;
 				selectedAlias = null;
-				selectedSharedCount = sharedCountMap[d.id] ?? 0;
 				// aliasを別途ルックアップ (edgesはD3変換後なので sharedCountMapと同様に事前マップを使う)
 				for (const e of edges) {
-					const src = typeof e.source === 'string' ? e.source : (e.source as any).id;
-					const tgt = typeof e.target === 'string' ? e.target : (e.target as any).id;
-					if (src === uid && tgt === d.id) {
+					if (e.source === uid && e.target === d.id) {
 						selectedAlias = e.alias || null;
 						break;
 					}
@@ -249,7 +257,7 @@
 		const label = g
 			.append('g')
 			.selectAll('text')
-			.data(nodes)
+			.data(nodes as GraphSimNode[])
 			.enter()
 			.append('text')
 			.text((d) => d.nickname)
@@ -261,17 +269,17 @@
 
 		sim.on('tick', () => {
 			link
-				.attr('x1', (d: any) => d.source.x)
-				.attr('y1', (d: any) => d.source.y)
-				.attr('x2', (d: any) => d.target.x)
-				.attr('y2', (d: any) => d.target.y);
-			node.attr('transform', (d: any) => `translate(${d.x},${d.y})`);
-			label.attr('x', (d: any) => d.x).attr('y', (d: any) => d.y);
+				.attr('x1', (d) => (d.source as GraphSimNode).x ?? 0)
+				.attr('y1', (d) => (d.source as GraphSimNode).y ?? 0)
+				.attr('x2', (d) => (d.target as GraphSimNode).x ?? 0)
+				.attr('y2', (d) => (d.target as GraphSimNode).y ?? 0);
+			node.attr('transform', (d) => `translate(${d.x ?? 0},${d.y ?? 0})`);
+			label.attr('x', (d) => d.x ?? 0).attr('y', (d) => d.y ?? 0);
 		});
 
 		node.call(
 			d3
-				.drag<SVGGElement, any>()
+				.drag<SVGGElement, GraphSimNode>()
 				.on('start', (e, d) => {
 					if (!e.active) sim.alphaTarget(0.3).restart();
 					d.fx = d.x;
@@ -293,12 +301,12 @@
 <div class="relative w-full" style="height: calc(100vh - 4rem - 4rem);">
 	<svg bind:this={svgEl} class="h-full w-full"></svg>
 
-	{#if data.userProfile && (data.userProfile as any).tags?.length === 0}
+	{#if data.userProfile && (data.userProfile.tags?.length ?? 0) === 0}
 		<div
 			class="absolute top-4 right-4 left-4 rounded-xl border border-kaiko-accent/30 bg-kaiko-accent-muted/90 px-4 py-3 text-sm text-kaiko-accent-dark"
 		>
 			プロフィールを設定してグラフに表示されよう →
-			<a href="/account" class="font-medium underline">設定</a>
+			<a href={resolve('/account')} class="font-medium underline">設定</a>
 		</div>
 	{/if}
 </div>
@@ -338,7 +346,7 @@
 			</div>
 
 			<div class="mb-4 flex flex-wrap gap-1.5">
-				{#each selectedNode.tags as tag}
+				{#each selectedNode.tags as tag (tag)}
 					<span class="rounded-full bg-kaiko-accent-muted px-3 py-1 text-sm text-kaiko-accent-dark"
 						>#{tag}</span
 					>
@@ -373,7 +381,7 @@
 					<div class="mb-4 space-y-3">
 						<h3 class="text-sm font-semibold text-kaiko-text">つながりの履歴</h3>
 						<ul class="space-y-2">
-							{#each timelineItems as item}
+							{#each timelineItems as item (`${item.type}-${item.date}-${item.event?.id ?? ''}`)}
 								<li class="flex items-start gap-3 text-sm">
 									<span class="shrink-0 text-kaiko-muted"
 										>{item.type === 'connection'
@@ -384,7 +392,10 @@
 										<span class="text-kaiko-text">🔗 {item.label}</span>
 									{:else if item.event}
 										<span class="flex flex-col gap-0.5">
-											<a href="/calendar/{item.event.id}" class="text-kaiko-accent hover:underline">
+											<a
+												href={resolve('/calendar/[slug]', { slug: item.event.id })}
+												class="text-kaiko-accent hover:underline"
+											>
 												{item.event.title}
 											</a>
 											{#if item.event.location}

@@ -1,15 +1,16 @@
 <script lang="ts">
 	import { onDestroy } from 'svelte';
 	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import QRCode from 'qrcode';
 	import jsQR from 'jsqr';
 
 	let { data } = $props();
 
 	let tab = $state<'show' | 'scan'>('show');
-	let canvas = $state<HTMLCanvasElement>(null as any);
-	let videoEl = $state<HTMLVideoElement>(null as any);
-	let scanCanvas = $state<HTMLCanvasElement>(null as any);
+	let canvas = $state<HTMLCanvasElement | null>(null);
+	let videoEl = $state<HTMLVideoElement | null>(null);
+	let scanCanvas = $state<HTMLCanvasElement | null>(null);
 	let stream: MediaStream | null = null;
 	let scanLoopId: number | null = null;
 	let pollIntervalId: ReturnType<typeof setInterval> | null = null;
@@ -46,10 +47,11 @@
 		scanError = '';
 		try {
 			stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+			if (!videoEl) return;
 			videoEl.srcObject = stream;
 			videoEl.play();
 			scanLoop();
-		} catch (e) {
+		} catch {
 			scanError = 'カメラへのアクセスが拒否されました';
 		}
 	}
@@ -132,7 +134,7 @@
 		});
 		pendingSubmitting = false;
 		if (res.ok) {
-			goto('/');
+			goto(resolve('/'));
 		}
 	}
 
@@ -191,7 +193,7 @@
 					<p class="text-lg font-semibold text-kaiko-text">{data.userProfile.nickname}</p>
 					<p class="text-kaiko-muted">{data.userProfile.schoolName}</p>
 					<div class="mt-2 flex flex-wrap justify-center gap-1">
-						{#each data.userProfile.tags as tag}
+						{#each data.userProfile.tags as tag (tag)}
 							<span
 								class="rounded-full bg-kaiko-accent-muted px-2 py-0.5 text-xs text-kaiko-accent-dark"
 								>#{tag}</span
@@ -289,7 +291,7 @@
 						});
 						scannedSubmitting = false;
 						if (res.ok) {
-							goto('/');
+							goto(resolve('/'));
 						}
 					}}
 					disabled={!scannedAliasInput.trim() || scannedSubmitting}

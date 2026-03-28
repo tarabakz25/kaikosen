@@ -5,6 +5,7 @@
 ### Changed
 
 #### CI ワークフロー分割
+
 - 単一の `ci.yml` を廃止し、`ci-lint.yml` / `ci-typecheck.yml` / `ci-test.yml` / `ci-build.yml` に分離（PR 上でジョブが別チェックとして並列実行される）
 - `CONTRIBUTING.md` の Actions 説明を分割後の構成に合わせて更新
 
@@ -15,6 +16,16 @@
 - `.github/workflows/ci.yml` の型チェックを実在スクリプト `bun run check` に修正。`format-check` ステップは `lint` 内の Prettier チェックと重複のため削除
 
 ### Fixed
+
+#### ESLint / 型 / CI テストの修正（recommended 準拠）
+
+- 内部リンク・`goto` に `$app/paths` の `resolve()` を利用（`navItems` は `as const` でルート型に一致）。クエリ付き `goto` はルール上アンマッチのため当該箇所のみ `eslint-disable-next-line`
+- `{#each}` にキーを追加。D3 周りの `any` を `GraphSimNode` / `GraphSimLink` に置換。`calendar/+page.server.ts` の `prefer-const` 対応
+- 外部イベント URL の `<a>` に `rel="external"` を追加（`no-navigation-without-resolve` の例外）
+- 参加者リストは `resolve()` を分岐で直接渡すため `{#snippet}` で本文を共通化
+- `card/+page.svelte`: キャンバス／ビデオの ref 型と `videoEl` の null ガード
+- `.github/workflows/ci-test.yml`: Vitest browser（Playwright）用に `bunx playwright install chromium` を追加
+- `src/routes/page.svelte.spec.ts`: 実 DOM に合わせ SVG の存在を検証し、`data` を明示的に渡す
 
 #### QRスキャンフロー: pending.userId → targetUserId バグ修正・リダイレクト先を `/` に統一
 
