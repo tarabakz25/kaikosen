@@ -6,6 +6,16 @@ import { eq, sql, inArray } from 'drizzle-orm';
 export const load: PageServerLoad = async ({ locals }) => {
 	const events = await db.select().from(event).orderBy(event.startAt);
 
+	const creatorIds = [...new Set(events.map((e) => e.createdBy))];
+	const organizerProfiles =
+		creatorIds.length > 0
+			? await db
+					.select({ userId: profile.userId, nickname: profile.nickname })
+					.from(profile)
+					.where(inArray(profile.userId, creatorIds))
+			: [];
+	const organizerMap = Object.fromEntries(organizerProfiles.map((p) => [p.userId, p.nickname]));
+
 	const attendeeCounts = await db
 		.select({ eventId: eventAttendee.eventId, count: sql<number>`count(*)::int` })
 		.from(eventAttendee)
@@ -52,7 +62,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 	const mappedEvents = events.map((e) => ({
 		...e,
 		attendeeCount: countMap[e.id] ?? 0,
-		connectedAttendees: connectedAttendeesByEvent[e.id] ?? []
+		connectedAttendees: connectedAttendeesByEvent[e.id] ?? [],
+		organizerNickname: organizerMap[e.createdBy] ?? null
 	}));
 
 	return {

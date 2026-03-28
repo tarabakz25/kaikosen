@@ -59,6 +59,9 @@
 							{#if ev.location}
 								<p class="mt-0.5 text-sm text-kaiko-muted">📍 {ev.location}</p>
 							{/if}
+							{#if ev.organizerNickname}
+								<p class="mt-0.5 text-sm text-kaiko-muted">👤 {ev.organizerNickname}</p>
+							{/if}
 							{#if ev.connectedAttendees?.length > 0}
 								<div class="mt-2 flex items-center gap-2">
 									<span class="text-xs text-kaiko-muted">参戦中</span>
@@ -94,6 +97,9 @@
 									<p class="mt-1 text-sm text-kaiko-muted">{formatDate(ev.startAt)}</p>
 									{#if ev.location}
 										<p class="mt-0.5 text-sm text-kaiko-muted">📍 {ev.location}</p>
+									{/if}
+									{#if ev.organizerNickname}
+										<p class="mt-0.5 text-sm text-kaiko-muted">👤 {ev.organizerNickname}</p>
 									{/if}
 								</div>
 								<div class="flex shrink-0 flex-col items-end gap-1">

@@ -108,6 +108,10 @@
 		{/if}
 	</div>
 
+	{#if data.organizerProfile}
+		<p class="mb-2 text-sm text-kaiko-muted">👤 主催: {data.organizerProfile.nickname}</p>
+	{/if}
+
 	{#if data.event.description}
 		<p class="mb-4 whitespace-pre-line text-kaiko-text">{data.event.description}</p>
 	{/if}

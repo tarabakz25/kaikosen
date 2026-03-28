@@ -102,12 +102,23 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 
 	const isOrganizer = locals.user?.id === ev.createdBy;
 
+	let organizerProfile: { nickname: string; avatarUrl: string | null } | null = null;
+	if (ev.createdBy !== 'system') {
+		const [orgProfile] = await db
+			.select({ nickname: profile.nickname, avatarUrl: profile.avatarUrl })
+			.from(profile)
+			.where(eq(profile.userId, ev.createdBy))
+			.limit(1);
+		organizerProfile = orgProfile ?? null;
+	}
+
 	return {
 		event: ev,
 		attendees,
 		isAttending,
 		connectionUserIds,
 		userId: locals.user?.id ?? null,
-		isOrganizer
+		isOrganizer,
+		organizerProfile
 	};
 };
