@@ -10,7 +10,11 @@ export const load: PageServerLoad = async ({ locals }) => {
 	const organizerProfiles =
 		creatorIds.length > 0
 			? await db
-					.select({ userId: profile.userId, nickname: profile.nickname, avatarUrl: profile.avatarUrl })
+					.select({
+						userId: profile.userId,
+						nickname: profile.nickname,
+						avatarUrl: profile.avatarUrl
+					})
 					.from(profile)
 					.where(inArray(profile.userId, creatorIds))
 			: [];
