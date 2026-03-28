@@ -20,12 +20,7 @@ export const PATCH: RequestHandler = async ({ request, locals, params }) => {
 	const [updated] = await db
 		.update(connection)
 		.set({ alias: alias.trim() })
-		.where(
-			and(
-				eq(connection.userId, locals.user.id),
-				eq(connection.targetUserId, targetUserId)
-			)
-		)
+		.where(and(eq(connection.userId, locals.user.id), eq(connection.targetUserId, targetUserId)))
 		.returning();
 
 	if (!updated) {

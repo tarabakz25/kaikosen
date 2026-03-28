@@ -16,7 +16,11 @@ export const load: PageServerLoad = async ({ url, locals }) => {
 		return;
 	}
 	const [targetProfile] = await db
-		.select({ nickname: profile.nickname, schoolName: profile.schoolName, avatarUrl: profile.avatarUrl })
+		.select({
+			nickname: profile.nickname,
+			schoolName: profile.schoolName,
+			avatarUrl: profile.avatarUrl
+		})
 		.from(profile)
 		.where(eq(profile.userId, uid))
 		.limit(1);

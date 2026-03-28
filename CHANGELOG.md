@@ -1,15 +1,82 @@
 # Changelog
 
-## [Unreleased] - 2026-03-01
+## [Unreleased] - 2026-03-28
 
 ### Fixed
 
+#### GitHub Actions CI — 環境変数未設定エラー
+
+- `ci-typecheck.yml` / `ci-build.yml` / `ci-test.yml`: `PUBLIC_SUPABASE_URL`・`PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY` が未設定で `$env/static/public` のエクスポートエラーが発生していた
+- 各ワークフローの実行ステップに `env:` ブロックを追加し、GitHub Secrets から参照するよう修正
+- `ci-test.yml` には `DATABASE_URL` も追加
+
+#### Supabase クライアント作成エラー（ブラウザ）
+
+- `src/lib/auth-client.ts` / `src/hooks.server.ts`: `process.env.PUBLIC_*` ではクライアントバンドルに値が乗らず URL/Key が `undefined` になり `@supabase/ssr` が throw していた。SvelteKit の `$env/static/public` に切り替え
+
+### Added
+
+#### ユーザーによるイベント作成機能 (close #8)
+
+- `src/lib/server/db/schema.ts`: `event` テーブルに `image_url` カラムを追加
+- `src/lib/types.ts`: `Event` 型に `imageUrl` フィールドを追加
+- `src/routes/api/events/+server.ts`: `POST /api/events` エンドポイントを追加（認証済みユーザーがイベントを作成可能）
+- `src/routes/calendar/new/+page.server.ts` / `+page.svelte`: イベント作成フォームページを新設
+  - タイトル・開始日時（必須）、終了日時・場所・ディスクリプション・詳細ページ URL・イベント画像 URL（任意）を入力可能
+  - 場所入力時に Google マップ確認リンクを表示
+  - 画像 URL 入力時にプレビュー表示
+- `src/routes/calendar/+page.svelte` / `+page.server.ts`: ログイン済みユーザーに「+ 作成」ボタンを表示
+- `src/routes/calendar/[slug]/+page.server.ts`: `isOrganizer` フラグを返却（作成者判定）
+- `src/routes/calendar/[slug]/+page.svelte`: イベント画像表示・主催者向け参加者ダッシュボード（テーブル形式、プロフィールリンク付き）を追加
+
+#### ユーザーロールタグ (closes #6)
+
+- `profile` テーブルに `role` カラムを追加（`'student' | 'alumni' | 'company'`、デフォルト `'student'`）
+- プロフィール編集画面にロール選択ボタンを追加（現役高専生 / 高専OB / 企業）
+- ロールに応じて所属フィールドのラベル・プレースホルダーを動的に変更（高専名 / 元高専名 / 企業名）
+- アカウント画面にロールバッジを表示
+
+---
+
+## [Unreleased] - 2026-03-01
+
+### Changed
+
+#### CI ワークフロー分割
+
+- 単一の `ci.yml` を廃止し、`ci-lint.yml` / `ci-typecheck.yml` / `ci-test.yml` / `ci-build.yml` に分離（PR 上でジョブが別チェックとして並列実行される）
+- `CONTRIBUTING.md` の Actions 説明を分割後の構成に合わせて更新
+
+#### コントリビューション手順の更新
+
+- `CONTRIBUTING.md` を kaikosen 現行スタック（SvelteKit、Bun、Vitest 二層、Drizzle、環境変数）に合わせて全面刷新。旧 `kmc-platform` 向けの npm / React 記述を削除
+- `.github/PULL_REQUEST_TEMPLATE.md` のチェックコマンドを `bun` ベースに更新し `test` / `check` を明記
+- `.github/workflows/ci.yml` の型チェックを実在スクリプト `bun run check` に修正。`format-check` ステップは `lint` 内の Prettier チェックと重複のため削除
+
+### Fixed
+
+#### CI ビルドで `DATABASE_URL` 未設定エラー
+
+- `src/lib/server/db/index.ts`: SvelteKit の postbuild `analyse` がサーバーモジュールを読み込む時点では環境変数が無いことがある。`$app/environment` の `building` が true のときだけ接続しないプレースホルダー URL で postgres クライアントを組み立て、実行時は引き続き `DATABASE_URL` 必須
+
+#### ESLint / 型 / CI テストの修正（recommended 準拠）
+
+- 内部リンク・`goto` に `$app/paths` の `resolve()` を利用（`navItems` は `as const` でルート型に一致）。クエリ付き `goto` はルール上アンマッチのため当該箇所のみ `eslint-disable-next-line`
+- `{#each}` にキーを追加。D3 周りの `any` を `GraphSimNode` / `GraphSimLink` に置換。`calendar/+page.server.ts` の `prefer-const` 対応
+- 外部イベント URL の `<a>` に `rel="external"` を追加（`no-navigation-without-resolve` の例外）
+- 参加者リストは `resolve()` を分岐で直接渡すため `{#snippet}` で本文を共通化
+- `card/+page.svelte`: キャンバス／ビデオの ref 型と `videoEl` の null ガード
+- `.github/workflows/ci-test.yml`: Vitest browser（Playwright）用に `bunx playwright install chromium` を追加
+- `src/routes/page.svelte.spec.ts`: 実 DOM に合わせ SVG の存在を検証し、`data` を明示的に渡す
+
 #### QRスキャンフロー: pending.userId → targetUserId バグ修正・リダイレクト先を `/` に統一
+
 - `src/routes/+layout.svelte`: グローバルpoll の `goto` で `body.pending.userId`（自分のID）を使っていたバグを `body.pending.targetUserId` に修正。また `/card` ページではローカルpollがあるためグローバルpollをスキップするよう条件追加
 - `src/routes/card/+page.svelte`: 二つ名登録成功後（scanned/pending 両方）に scan 再起動していたのを `goto('/')` に変更
 - `src/routes/connect/+page.svelte`: 登録成功後のリダイレクトを `/profile/...` から `/` に変更
 
 #### QRスキャン: 二つ名登録画面が表示されない問題
+
 - `src/routes/connect/+page.server.ts`: プロフィールへのリダイレクトを廃止。`/connect?uid=` で相手プロフィールを取得し二つ名登録用データを返す
 - `src/routes/connect/+page.svelte`: 二つ名入力フォームを表示。登録後は相手プロフィールへ遷移
 - `src/routes/+layout.server.ts`: `/connect` を保護ルートに追加（未ログイン時はログインへ）
@@ -17,9 +84,11 @@
 ### Added
 
 #### ページ遷移: ランドルト環スピナー
+
 - `src/routes/+layout.svelte`: `navigating` ($app/state) を利用し、ページ遷移中に全画面オーバーレイでランドルト環（C字形・accent色）スピナーを表示
 
 #### QRスキャンされた側のグローバル自動リダイレクト
+
 - `src/routes/+layout.svelte`: pending接続ポーリング (2秒間隔) をレイアウトに移動。ログイン中であればどのページにいてもQRスキャンを検知し `/connect?uid=` へリダイレクト
 - `src/routes/card/+page.svelte`: ローカルのpolling実装 (`pollIntervalId`, `startPoll`, `stopPoll`) を削除。レイアウトのグローバルポーリングに一本化
 
@@ -28,53 +97,65 @@
 ### Added
 
 #### UI: ロゴ配置
+
 - `src/routes/login/+page.svelte`: ランディングページ中央に `logo.webp` を表示。`h1` テキストを削除しロゴ画像に置換
 - `src/routes/+layout.svelte`: 認証済みユーザー向けに sticky ヘッダーを追加し左上にロゴを表示
 
 #### グラフ: ノードをGoogle Avatarアイコンに変更
+
 - `src/routes/+page.svelte`: D3ノードを `<circle>` から `<g>` ベースに変更。`avatarUrl` がある場合は SVG `<image>` + `clipPathUnits="objectBoundingBox"` で円形クリップ、ない場合は背景色+頭文字のフォールバック表示。ポップアップアイコンも `<img>` または頭文字に対応
 
 #### グラフ: イベント共通参加回数の炎エフェクト
+
 - `src/lib/types.ts`: `GraphEdge` に `sharedEventCount: number` フィールドを追加
 - `src/routes/api/graph/+server.ts`: 自分が参加したイベントと接続ユーザーの共通参加数を集計し `sharedEventCount` をエッジに付与
 - `src/routes/+page.svelte`: SVG `<defs>` に3段階の橙色グローフィルター (`flame-1/2/3`) を追加。sharedEventCount に応じてノードに適用。ポップアップに `🔥 一緒に参加: N回` を表示
 
 #### QRカード: スキャンされた側のpending自動遷移
+
 - `src/lib/server/db/schema.ts`: `connection` テーブルに `(userId, targetUserId)` の複合 unique インデックスを追加
 - `src/routes/api/connections/+server.ts`: GET に `?pending=true` クエリ対応追加 (alias='' かつ targetUserId=自分 の接続を返す)。POST を upsert に変更 (`onConflictDoUpdate`)
 - `src/routes/card/+page.svelte`: 表示タブ中に2秒間隔で pending ポーリングを実行。pending を検知したら `/connect?uid=` にリダイレクト
 
 #### イベント: 参加ボタン押下時の即時リスト反映
+
 - `src/routes/calendar/[slug]/+page.svelte`: `localAttendees` を `$state` で保持し楽観的更新を実装。参加/取り消し時にリストを即時更新、API失敗時は元に戻す。参加者数表示も `localAttendees.length` に変更
 
 ### Added / Fixed
 
 #### グラフ: ノードクリック時に二つ名を表示
+
 - `src/lib/types.ts`: `GraphEdge` に `alias: string` フィールドを追加
 - `src/routes/api/graph/+server.ts`: エッジに `alias` を含め、`currentUserId` をレスポンスに追加
 - `src/routes/+page.svelte`: `currentUserId`・`graphEdges` を保持し、ノードクリック時に対応エッジから `alias` を取得。ポップアップに「二つ名」として表示
 
 #### つながり機能: 双方向接続の自動作成
+
 - `src/routes/api/connections/+server.ts`: POST 時に A→B を作成後、B→A の逆方向 connection が存在しなければ自動挿入。グラフがスキャンした側・された側の両方に反映される
 
 #### QRカード機能: タブ切替後の再描画修正
+
 - `src/routes/card/+page.svelte`: QR描画を `onMount` から `$effect` に変更。スキャンタブへ切替後に表示タブへ戻ってもキャンバスバインディングが再評価され QR が再描画される
 
 #### イベント機能: 過去コンテスト共通参加者表示
+
 - `src/routes/calendar/[slug]/+page.server.ts`: モックイベント (mock-1〜mock-4) 用に `MOCK_ATTENDEES` を追加。各参加者に `pastContests: string[]` フィールドを持たせ、DB 参加者は `[]` で補完
 - `src/routes/calendar/[slug]/+page.svelte`: 「参加する」クリック時に過去コンテスト選択モーダルを表示 (localStorage に永続化)。共通コンテスト数で参加者をソートし「共通N個」バッジを表示
 
 #### プロフィール: 過去コンテスト参加記録の設定
+
 - `src/lib/server/db/schema.ts`: `profile` テーブルに `pastContests text[]` カラムを追加
 - `src/lib/contests.ts`: `PAST_CONTESTS` 定数を共有モジュールとして切り出し
 - `src/routes/api/profile/+server.ts`: `pastContests` フィールドを受け取って保存
 - `src/routes/account/edit/+page.svelte`: 過去コンテスト選択チェックボックスUI を追加
 
 #### イベント機能: モックユーザー削除・プロフィール連携
+
 - `src/routes/calendar/[slug]/+page.server.ts`: MOCK_ATTENDEES を完全削除。参加者クエリに `pastContests` を追加
 - `src/routes/calendar/[slug]/+page.svelte`: localStorage/モーダルを廃止。自分のプロフィールの `pastContests` を使って共通コンテスト数を計算・ソート・バッジ表示
 
 #### イベント機能: 参加者をDB実データに反映
+
 - `src/routes/calendar/[slug]/+page.server.ts`: mock イベントでも `isAttending` を DB から取得するよう修正。参加者リストも DB の実際の参加者を優先し、未参加のモックユーザーを後続追加する方式に変更
 
 ## [Unreleased] - 2026-02-28

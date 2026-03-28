@@ -10,8 +10,9 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 	}
 
 	const body = await request.json();
-	const { nickname, schoolName, tags, pastContests, message, avatarUrl } = body as {
+	const { nickname, role, schoolName, tags, pastContests, message, avatarUrl } = body as {
 		nickname: string;
+		role: 'student' | 'alumni' | 'company';
 		schoolName: string;
 		tags: string[];
 		pastContests: string[];
@@ -27,6 +28,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		.values({
 			userId,
 			nickname,
+			role: role ?? 'student',
 			schoolName,
 			tags,
 			pastContests: pastContestsList,
@@ -37,6 +39,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 			target: profile.userId,
 			set: {
 				nickname,
+				role: role ?? 'student',
 				schoolName,
 				tags,
 				pastContests: pastContestsList,

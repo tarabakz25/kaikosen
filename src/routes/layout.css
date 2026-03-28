@@ -6,33 +6,32 @@ html {
 	font-family: var(--font-sans);
 }
 
-
 /* Light theme (default) - base: #8FC1B5 */
 @theme {
-  --color-kaiko-bg: #F9F7F3;
-  --color-kaiko-surface: #FFFFFF;
-  --color-kaiko-surface-alt: #F0EDE8;
-  --color-kaiko-text: #1f2937;
-  --color-kaiko-muted: #6b7280;
-  --color-kaiko-border: #d1d5db;
-  --color-kaiko-accent: #8FC1B5;
-  --color-kaiko-accent-hover: #7AB8A9;
-  --color-kaiko-accent-muted: #B8E0D8;
-  --color-kaiko-accent-dark: #5A9A8E;
-  
-  --font-sans: 'avenir-next-lt-pro', 'meiryo-ui', sans-serif;
+	--color-kaiko-bg: #f9f7f3;
+	--color-kaiko-surface: #ffffff;
+	--color-kaiko-surface-alt: #f0ede8;
+	--color-kaiko-text: #1f2937;
+	--color-kaiko-muted: #6b7280;
+	--color-kaiko-border: #d1d5db;
+	--color-kaiko-accent: #8fc1b5;
+	--color-kaiko-accent-hover: #7ab8a9;
+	--color-kaiko-accent-muted: #b8e0d8;
+	--color-kaiko-accent-dark: #5a9a8e;
+
+	--font-sans: 'avenir-next-lt-pro', 'meiryo-ui', sans-serif;
 }
 
 /* Dark theme */
 [data-theme='dark'] {
-  --color-kaiko-bg: #111827;
-  --color-kaiko-surface: #1f2937;
-  --color-kaiko-surface-alt: #374151;
-  --color-kaiko-text: #f9fafb;
-  --color-kaiko-muted: #9ca3af;
-  --color-kaiko-border: #374151;
-  --color-kaiko-accent: #8FC1B5;
-  --color-kaiko-accent-hover: #9FCFC5;
-  --color-kaiko-accent-muted: #374151;
-  --color-kaiko-accent-dark: #B8E0D8;
+	--color-kaiko-bg: #111827;
+	--color-kaiko-surface: #1f2937;
+	--color-kaiko-surface-alt: #374151;
+	--color-kaiko-text: #f9fafb;
+	--color-kaiko-muted: #9ca3af;
+	--color-kaiko-border: #374151;
+	--color-kaiko-accent: #8fc1b5;
+	--color-kaiko-accent-hover: #9fcfc5;
+	--color-kaiko-accent-muted: #374151;
+	--color-kaiko-accent-dark: #b8e0d8;
 }

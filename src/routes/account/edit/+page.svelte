@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onDestroy } from 'svelte';
 	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import { PAST_CONTESTS_TITLE } from '$lib/contests';
 	import { supabase } from '$lib/auth-client';
 
@@ -9,7 +10,19 @@
 	const maxYear = 2025;
 	const years = Array.from({ length: maxYear - 1960 + 1 }, (_, i) => maxYear - i);
 
+	type Role = 'student' | 'alumni' | 'company';
+
+	const roleLabels: Record<
+		Role,
+		{ label: string; schoolLabel: string; schoolPlaceholder: string }
+	> = {
+		student: { label: '現役高専生', schoolLabel: '高専名', schoolPlaceholder: '例: 東京高専' },
+		alumni: { label: '高専OB', schoolLabel: '元高専名', schoolPlaceholder: '例: 東京高専' },
+		company: { label: '企業', schoolLabel: '企業名', schoolPlaceholder: '例: 株式会社〇〇' }
+	};
+
 	let nickname = $state(data.userProfile?.nickname ?? '');
+	let role = $state<Role>((data.userProfile?.role as Role) ?? 'student');
 	let schoolName = $state(data.userProfile?.schoolName ?? '');
 	let tagInput = $state('');
 	let tags = $state<string[]>(data.userProfile?.tags ?? []);
@@ -36,7 +49,7 @@
 				videoEl.srcObject = stream;
 				await videoEl.play();
 			}
-		} catch (e) {
+		} catch {
 			errorMessage = 'カメラへのアクセスが拒否されました';
 			showCamera = false;
 		}
@@ -139,6 +152,7 @@
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({
 					nickname,
+					role,
 					schoolName,
 					tags,
 					pastContests,
@@ -147,7 +161,7 @@
 				})
 			});
 			if (res.ok) {
-				await goto('/account', { invalidateAll: true });
+				await goto(resolve('/account'), { invalidateAll: true });
 			} else {
 				errorMessage = '保存に失敗しました';
 			}
@@ -160,7 +174,9 @@
 
 <div class="mx-auto max-w-lg px-4 py-8">
 	<div class="mb-6 flex items-center gap-3">
-		<a href="/account" class="text-kaiko-muted transition-colors hover:text-kaiko-text">← 戻る</a>
+		<a href={resolve('/account')} class="text-kaiko-muted transition-colors hover:text-kaiko-text"
+			>← 戻る</a
+		>
 		<h1 class="text-2xl font-bold text-kaiko-text">プロフィール編集</h1>
 	</div>
 
@@ -192,6 +208,23 @@
 		</div>
 
 		<div>
+			<label class="mb-2 block text-sm font-medium text-kaiko-muted">ロール</label>
+			<div class="grid grid-cols-3 gap-2">
+				{#each Object.entries(roleLabels) as [value, { label }] (value)}
+					<button
+						type="button"
+						onclick={() => (role = value as Role)}
+						class="rounded-lg border py-2.5 text-sm font-medium transition-colors {role === value
+							? 'border-kaiko-accent bg-kaiko-accent text-white'
+							: 'border-kaiko-border bg-kaiko-surface text-kaiko-text hover:bg-kaiko-surface-alt'}"
+					>
+						{label}
+					</button>
+				{/each}
+			</div>
+		</div>
+
+		<div>
 			<label class="mb-1 block text-sm font-medium text-kaiko-muted">ニックネーム</label>
 			<input
 				bind:value={nickname}
@@ -202,11 +235,13 @@
 		</div>
 
 		<div>
-			<label class="mb-1 block text-sm font-medium text-kaiko-muted">高専名</label>
+			<label class="mb-1 block text-sm font-medium text-kaiko-muted"
+				>{roleLabels[role].schoolLabel}</label
+			>
 			<input
 				bind:value={schoolName}
 				type="text"
-				placeholder="例: 東京高専"
+				placeholder={roleLabels[role].schoolPlaceholder}
 				class="w-full rounded-lg border border-kaiko-border bg-kaiko-surface px-4 py-3 text-kaiko-text placeholder-kaiko-muted focus:border-kaiko-accent focus:outline-none"
 			/>
 		</div>
@@ -214,7 +249,7 @@
 		<div>
 			<label class="mb-1 block text-sm font-medium text-kaiko-muted">タグ（スキル・興味）</label>
 			<div class="mb-2 flex flex-wrap gap-2">
-				{#each tags as tag}
+				{#each tags as tag (tag)}
 					<span
 						class="flex items-center gap-1 rounded-full bg-kaiko-accent-muted px-3 py-1 text-sm text-kaiko-accent-dark"
 					>
@@ -240,7 +275,7 @@
 					bind:value={selectedContestId}
 					class="rounded-lg border border-kaiko-border bg-kaiko-surface px-3 py-2 text-sm text-kaiko-text focus:border-kaiko-accent focus:outline-none"
 				>
-					{#each PAST_CONTESTS_TITLE as contest}
+					{#each PAST_CONTESTS_TITLE as contest (contest.id)}
 						<option value={contest.id}>{contest.title}</option>
 					{/each}
 				</select>
@@ -248,7 +283,7 @@
 					bind:value={selectedYear}
 					class="rounded-lg border border-kaiko-border bg-kaiko-surface px-3 py-2 text-sm text-kaiko-text focus:border-kaiko-accent focus:outline-none"
 				>
-					{#each years as y}
+					{#each years as y (y)}
 						<option value={y}>{y}年</option>
 					{/each}
 				</select>
@@ -261,7 +296,7 @@
 				</button>
 			</div>
 			<div class="flex flex-col gap-2">
-				{#each pastContests as entry}
+				{#each pastContests as entry (entry)}
 					<div
 						class="flex items-center justify-between rounded-xl border border-kaiko-border bg-kaiko-surface px-4 py-3"
 					>

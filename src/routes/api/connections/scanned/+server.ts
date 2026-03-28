@@ -21,12 +21,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 	const [existing] = await db
 		.select()
 		.from(connection)
-		.where(
-			and(
-				eq(connection.userId, scannedUserId),
-				eq(connection.targetUserId, locals.user.id)
-			)
-		)
+		.where(and(eq(connection.userId, scannedUserId), eq(connection.targetUserId, locals.user.id)))
 		.limit(1);
 
 	if (existing) {

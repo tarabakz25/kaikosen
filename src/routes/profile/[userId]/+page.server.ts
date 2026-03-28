@@ -7,11 +7,7 @@ import { eq, and, desc } from 'drizzle-orm';
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const userId = params.userId;
 
-	const [userProfile] = await db
-		.select()
-		.from(profile)
-		.where(eq(profile.userId, userId))
-		.limit(1);
+	const [userProfile] = await db.select().from(profile).where(eq(profile.userId, userId)).limit(1);
 
 	if (!userProfile) error(404, 'プロフィールが見つかりません');
 

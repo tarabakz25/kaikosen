@@ -7,9 +7,18 @@ export const profile = pgTable('profile', {
 		.$defaultFn(() => crypto.randomUUID()),
 	userId: text('user_id').notNull().unique(),
 	nickname: text('nickname').notNull(),
+	role: text('role', { enum: ['student', 'alumni', 'company'] })
+		.notNull()
+		.default('student'),
 	schoolName: text('school_name').notNull(),
-	tags: text('tags').array().notNull().default(sql`'{}'::text[]`),
-	pastContests: text('past_contests').array().notNull().default(sql`'{}'::text[]`),
+	tags: text('tags')
+		.array()
+		.notNull()
+		.default(sql`'{}'::text[]`),
+	pastContests: text('past_contests')
+		.array()
+		.notNull()
+		.default(sql`'{}'::text[]`),
 	message: text('message'),
 	avatarUrl: text('avatar_url'),
 	createdAt: timestamp('created_at').notNull().defaultNow(),
@@ -40,6 +49,7 @@ export const event = pgTable('event', {
 	startAt: timestamp('start_at').notNull(),
 	endAt: timestamp('end_at'),
 	location: text('location'),
+	imageUrl: text('image_url'),
 	createdBy: text('created_by').notNull(),
 	createdAt: timestamp('created_at').notNull().defaultNow()
 });
@@ -53,4 +63,3 @@ export const eventAttendee = pgTable(
 	},
 	(t) => [primaryKey({ columns: [t.eventId, t.userId] })]
 );
-

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	import { PAST_CONTESTS_TITLE } from '$lib/contests';
 	import { parseUtc } from '$lib/date';
 
@@ -45,8 +46,16 @@
 			});
 		}
 		items.sort((a, b) => {
-			const dateA = a.date ? parseUtc(a.date).getTime() : (a.year ? new Date(`${a.year}-01-01`).getTime() : 0);
-			const dateB = b.date ? parseUtc(b.date).getTime() : (b.year ? new Date(`${b.year}-01-01`).getTime() : 0);
+			const dateA = a.date
+				? parseUtc(a.date).getTime()
+				: a.year
+					? new Date(`${a.year}-01-01`).getTime()
+					: 0;
+			const dateB = b.date
+				? parseUtc(b.date).getTime()
+				: b.year
+					? new Date(`${b.year}-01-01`).getTime()
+					: 0;
 			return dateB - dateA;
 		});
 		return items;
@@ -104,7 +113,7 @@
 		<!-- タグ -->
 		{#if (data.profile?.tags ?? []).length > 0}
 			<div class="flex flex-wrap justify-center gap-1.5">
-				{#each data.profile?.tags ?? [] as tag}
+				{#each data.profile?.tags ?? [] as tag (tag)}
 					<span class="rounded-full bg-kaiko-accent-muted px-3 py-1 text-sm text-kaiko-accent-dark"
 						>#{tag}</span
 					>
@@ -124,11 +133,11 @@
 			<div class="w-full">
 				<h2 class="mb-2 text-sm font-medium text-kaiko-muted">参加したイベント・コンテスト</h2>
 				<ul class="space-y-1.5">
-					{#each participationList as item}
+					{#each participationList as item (`${item.type}-${item.eventId ?? item.label}-${item.year ?? ''}`)}
 						<li>
 							{#if item.type === 'event' && item.eventId}
 								<a
-									href="/calendar/{item.eventId}"
+									href={resolve('/calendar/[slug]', { slug: item.eventId })}
 									class="block rounded-lg px-3 py-2 text-sm text-kaiko-text transition-colors hover:bg-kaiko-surface-alt {item.isShared
 										? 'border-2 border-kaiko-accent bg-kaiko-accent-muted/30'
 										: 'border border-kaiko-border bg-kaiko-surface'}"
@@ -169,7 +178,7 @@
 		<!-- 自分の場合はアカウントへ -->
 		{#if data.isSelf}
 			<a
-				href="/account"
+				href={resolve('/account')}
 				class="mt-4 block w-full rounded-xl bg-kaiko-accent py-3 text-center font-semibold text-white transition-colors hover:bg-kaiko-accent-hover"
 			>
 				アカウント設定

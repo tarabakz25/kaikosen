@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import { supabase } from '$lib/auth-client';
 	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import { getTheme, setTheme } from '$lib/theme';
 	import { PAST_CONTESTS_TITLE } from '$lib/contests';
 	import { parseUtc } from '$lib/date';
@@ -20,7 +21,13 @@
 	}
 
 	const participationList = $derived.by(() => {
-		const items: Array<{ type: 'contest' | 'event'; label: string; year?: string; date?: string | Date; eventId?: string }> = [];
+		const items: Array<{
+			type: 'contest' | 'event';
+			label: string;
+			year?: string;
+			date?: string | Date;
+			eventId?: string;
+		}> = [];
 		for (const entry of data.userProfile?.pastContests ?? []) {
 			const i = entry.lastIndexOf('-');
 			const year = i >= 0 ? entry.slice(i + 1) : '';
@@ -40,8 +47,16 @@
 			});
 		}
 		items.sort((a, b) => {
-			const dateA = a.date ? parseUtc(a.date).getTime() : (a.year ? new Date(`${a.year}-01-01`).getTime() : 0);
-			const dateB = b.date ? parseUtc(b.date).getTime() : (b.year ? new Date(`${b.year}-01-01`).getTime() : 0);
+			const dateA = a.date
+				? parseUtc(a.date).getTime()
+				: a.year
+					? new Date(`${a.year}-01-01`).getTime()
+					: 0;
+			const dateB = b.date
+				? parseUtc(b.date).getTime()
+				: b.year
+					? new Date(`${b.year}-01-01`).getTime()
+					: 0;
 			return dateB - dateA;
 		});
 		return items;
@@ -58,7 +73,7 @@
 
 	async function signOut() {
 		await supabase.auth.signOut();
-		goto('/login');
+		goto(resolve('/login'));
 	}
 
 	function onAvatarError(e: Event) {
@@ -98,13 +113,29 @@
 		<!-- ニックネーム・高専名 -->
 		<div class="w-full text-center">
 			<p class="text-xl font-bold text-kaiko-text">{data.userProfile?.nickname ?? '未設定'}</p>
+			{#if data.userProfile?.role}
+				<span
+					class="mt-1 inline-block rounded-full px-3 py-0.5 text-xs font-medium {data.userProfile
+						.role === 'student'
+						? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300'
+						: data.userProfile.role === 'alumni'
+							? 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300'
+							: 'bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300'}"
+				>
+					{data.userProfile.role === 'student'
+						? '現役高専生'
+						: data.userProfile.role === 'alumni'
+							? '高専OB'
+							: '企業'}
+				</span>
+			{/if}
 			<p class="mt-1 text-kaiko-muted">{data.userProfile?.schoolName ?? '未設定'}</p>
 		</div>
 
 		<!-- タグ -->
 		{#if (data.userProfile?.tags ?? []).length > 0}
 			<div class="flex flex-wrap justify-center gap-1.5">
-				{#each data.userProfile?.tags ?? [] as tag}
+				{#each data.userProfile?.tags ?? [] as tag (tag)}
 					<span class="rounded-full bg-kaiko-accent-muted px-3 py-1 text-sm text-kaiko-accent-dark"
 						>#{tag}</span
 					>
@@ -123,11 +154,11 @@
 			<div class="w-full">
 				<h2 class="mb-2 text-sm font-medium text-kaiko-muted">参加したイベント・コンテスト</h2>
 				<ul class="space-y-1.5">
-					{#each participationList as item}
+					{#each participationList as item (`${item.type}-${item.eventId ?? item.label}-${item.year ?? ''}`)}
 						<li>
 							{#if item.type === 'event' && item.eventId}
 								<a
-									href="/calendar/{item.eventId}"
+									href={resolve('/calendar/[slug]', { slug: item.eventId })}
 									class="block rounded-lg border border-kaiko-border bg-kaiko-surface px-3 py-2 text-sm text-kaiko-text transition-colors hover:bg-kaiko-surface-alt"
 								>
 									<span class="font-medium">{item.label}</span>
@@ -154,7 +185,7 @@
 		<!-- アクション -->
 		<div class="mt-4 w-full space-y-3">
 			<a
-				href="/account/edit"
+				href={resolve('/account/edit')}
 				class="block w-full rounded-xl bg-kaiko-accent py-3 text-center font-semibold text-white transition-colors hover:bg-kaiko-accent-hover"
 			>
 				プロフィールを編集
