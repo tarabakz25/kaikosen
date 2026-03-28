@@ -94,7 +94,15 @@
 			<p class="text-sm text-kaiko-muted">〜 {formatDate(data.event.endAt)}</p>
 		{/if}
 		{#if data.event.location}
-			<p class="text-kaiko-text">📍 {data.event.location}</p>
+			<p class="text-kaiko-text">
+				📍
+				<a
+					href="https://www.google.com/maps/search/?api=1&query={encodeURIComponent(data.event.location)}"
+					target="_blank"
+					rel="noopener external"
+					class="underline hover:text-kaiko-accent"
+				>{data.event.location}</a>
+			</p>
 		{/if}
 	</div>
 
