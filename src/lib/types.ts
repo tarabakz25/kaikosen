@@ -23,6 +23,7 @@ export type Event = {
 	startAt: Date;
 	endAt: Date | null;
 	location: string | null;
+	imageUrl: string | null;
 	createdBy: string;
 	createdAt: Date;
 };
