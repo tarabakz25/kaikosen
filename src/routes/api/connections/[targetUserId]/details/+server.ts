@@ -11,12 +11,12 @@ export const GET: RequestHandler = async ({ locals, params }) => {
 	const targetUserId = params.targetUserId;
 
 	const [conn] = await db
-		.select({ connectedAt: connection.connectedAt })
+		.select({ connectedAt: connection.connectedAt, alias: connection.alias })
 		.from(connection)
 		.where(and(eq(connection.userId, userId), eq(connection.targetUserId, targetUserId)))
 		.limit(1);
 
-	if (!conn) return Response.json({ connectedAt: null, sharedEvents: [] });
+	if (!conn) return Response.json({ connectedAt: null, alias: null, sharedEvents: [] });
 
 	// 両者が参加したイベントを取得
 	const myAttendances = await db
@@ -35,6 +35,7 @@ export const GET: RequestHandler = async ({ locals, params }) => {
 	if (sharedEventIds.length === 0) {
 		return Response.json({
 			connectedAt: conn.connectedAt,
+			alias: conn.alias || null,
 			sharedEvents: []
 		});
 	}
@@ -53,6 +54,7 @@ export const GET: RequestHandler = async ({ locals, params }) => {
 
 	return Response.json({
 		connectedAt: conn.connectedAt,
+		alias: conn.alias || null,
 		sharedEvents
 	});
 };
