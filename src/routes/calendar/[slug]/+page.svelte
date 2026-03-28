@@ -364,8 +364,8 @@
 								role: attendee.role,
 								avatarUrl: attendee.avatarUrl
 							};
-						}}
-					>{@render attendeeRowInner()}</button>
+						}}>{@render attendeeRowInner()}</button
+					>
 				{:else}
 					<a href={resolve('/profile/[userId]', { userId: attendee.userId })} class={rowClass}
 						>{@render attendeeRowInner()}</a
