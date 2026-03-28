@@ -126,7 +126,9 @@
 			/>
 			{#if location.trim()}
 				<a
-					href="https://www.google.com/maps/search/?api=1&query={encodeURIComponent(location.trim())}"
+					href="https://www.google.com/maps/search/?api=1&query={encodeURIComponent(
+						location.trim()
+					)}"
 					target="_blank"
 					rel="noopener external"
 					class="mt-1 inline-block text-xs text-kaiko-accent hover:underline"

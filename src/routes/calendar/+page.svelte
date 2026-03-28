@@ -46,11 +46,7 @@
 				>
 					{#if ev.imageUrl}
 						<!-- 画像あり: 画像 + フッター -->
-						<img
-							src={ev.imageUrl}
-							alt={ev.title}
-							class="h-40 w-full object-cover"
-						/>
+						<img src={ev.imageUrl} alt={ev.title} class="h-40 w-full object-cover" />
 						<div class="p-4">
 							<div class="flex items-start justify-between gap-2">
 								<h2 class="truncate font-semibold text-kaiko-text">{ev.title}</h2>

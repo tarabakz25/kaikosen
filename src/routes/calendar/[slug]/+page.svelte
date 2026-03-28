@@ -191,7 +191,11 @@
 					'flex items-center gap-3 rounded-lg border border-kaiko-border bg-kaiko-surface px-4 py-3 transition-colors hover:bg-kaiko-surface-alt'}
 				{#snippet attendeeRowInner()}
 					{#if attendee.avatarUrl}
-						<img src={attendee.avatarUrl} alt="" class="h-8 w-8 shrink-0 rounded-full object-cover" />
+						<img
+							src={attendee.avatarUrl}
+							alt=""
+							class="h-8 w-8 shrink-0 rounded-full object-cover"
+						/>
 					{:else}
 						<div
 							class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-kaiko-accent text-sm font-bold text-white"

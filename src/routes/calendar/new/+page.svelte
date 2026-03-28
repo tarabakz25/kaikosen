@@ -54,8 +54,9 @@
 </script>
 
 <div class="mx-auto max-w-lg px-4 py-6">
-	<a href={resolve('/calendar')} class="mb-4 inline-block text-sm text-kaiko-muted hover:text-kaiko-text"
-		>← 戻る</a
+	<a
+		href={resolve('/calendar')}
+		class="mb-4 inline-block text-sm text-kaiko-muted hover:text-kaiko-text">← 戻る</a
 	>
 	<h1 class="mb-6 text-2xl font-bold text-kaiko-text">イベントを作成</h1>
 
@@ -112,7 +113,9 @@
 			/>
 			{#if location.trim()}
 				<a
-					href="https://www.google.com/maps/search/?api=1&query={encodeURIComponent(location.trim())}"
+					href="https://www.google.com/maps/search/?api=1&query={encodeURIComponent(
+						location.trim()
+					)}"
 					target="_blank"
 					rel="noopener external"
 					class="mt-1 inline-block text-xs text-kaiko-accent hover:underline"
@@ -139,7 +142,7 @@
 		<!-- 詳細ページURL (optional) -->
 		<div>
 			<label for="url" class="mb-1 block text-sm font-medium text-kaiko-text">
-				詳細ページURL <span class="text-kaiko-muted text-xs">(任意)</span>
+				詳細ページURL <span class="text-xs text-kaiko-muted">(任意)</span>
 			</label>
 			<input
 				id="url"
@@ -153,7 +156,7 @@
 		<!-- イベント画像URL (optional) -->
 		<div>
 			<label for="imageUrl" class="mb-1 block text-sm font-medium text-kaiko-text">
-				イベント画像URL <span class="text-kaiko-muted text-xs">(任意・横画像推奨)</span>
+				イベント画像URL <span class="text-xs text-kaiko-muted">(任意・横画像推奨)</span>
 			</label>
 			<input
 				id="imageUrl"
