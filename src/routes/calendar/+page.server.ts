@@ -10,11 +10,13 @@ export const load: PageServerLoad = async ({ locals }) => {
 	const organizerProfiles =
 		creatorIds.length > 0
 			? await db
-					.select({ userId: profile.userId, nickname: profile.nickname })
+					.select({ userId: profile.userId, nickname: profile.nickname, avatarUrl: profile.avatarUrl })
 					.from(profile)
 					.where(inArray(profile.userId, creatorIds))
 			: [];
-	const organizerMap = Object.fromEntries(organizerProfiles.map((p) => [p.userId, p.nickname]));
+	const organizerMap = Object.fromEntries(
+		organizerProfiles.map((p) => [p.userId, { nickname: p.nickname, avatarUrl: p.avatarUrl }])
+	);
 
 	const attendeeCounts = await db
 		.select({ eventId: eventAttendee.eventId, count: sql<number>`count(*)::int` })
@@ -63,7 +65,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 		...e,
 		attendeeCount: countMap[e.id] ?? 0,
 		connectedAttendees: connectedAttendeesByEvent[e.id] ?? [],
-		organizerNickname: organizerMap[e.createdBy] ?? null
+		organizer: organizerMap[e.createdBy] ?? null
 	}));
 
 	return {

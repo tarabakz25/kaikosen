@@ -51,8 +51,24 @@
 							<div class="flex items-start justify-between gap-2">
 								<div class="min-w-0 flex-1">
 									<h2 class="truncate font-semibold text-kaiko-text">{ev.title}</h2>
-									{#if ev.organizerNickname}
-										<p class="mt-0.5 text-xs text-kaiko-muted">👤 {ev.organizerNickname}</p>
+									{#if ev.organizer}
+										<div class="mt-1 flex items-center gap-1.5">
+											{#if ev.organizer.avatarUrl}
+												<img
+													src={ev.organizer.avatarUrl}
+													alt={ev.organizer.nickname}
+													class="h-5 w-5 rounded-full object-cover"
+												/>
+											{:else}
+												<div
+													class="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white"
+													style="background-color: {avatarColor(ev.organizer.nickname)}"
+												>
+													{ev.organizer.nickname[0]}
+												</div>
+											{/if}
+											<span class="text-xs text-kaiko-muted">{ev.organizer.nickname}</span>
+										</div>
 									{/if}
 								</div>
 								<span
@@ -96,8 +112,24 @@
 							<div class="flex items-start justify-between gap-2">
 								<div class="min-w-0 flex-1">
 									<h2 class="truncate font-semibold text-kaiko-text">{ev.title}</h2>
-									{#if ev.organizerNickname}
-										<p class="mt-0.5 text-xs text-kaiko-muted">👤 {ev.organizerNickname}</p>
+									{#if ev.organizer}
+										<div class="mt-1 flex items-center gap-1.5">
+											{#if ev.organizer.avatarUrl}
+												<img
+													src={ev.organizer.avatarUrl}
+													alt={ev.organizer.nickname}
+													class="h-5 w-5 rounded-full object-cover"
+												/>
+											{:else}
+												<div
+													class="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white"
+													style="background-color: {avatarColor(ev.organizer.nickname)}"
+												>
+													{ev.organizer.nickname[0]}
+												</div>
+											{/if}
+											<span class="text-xs text-kaiko-muted">{ev.organizer.nickname}</span>
+										</div>
 									{/if}
 									<p class="mt-1 text-sm text-kaiko-muted">{formatDate(ev.startAt)}</p>
 									{#if ev.location}
